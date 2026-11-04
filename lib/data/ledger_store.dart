@@ -280,12 +280,20 @@ class LedgerStore {
     return row['count'] as int;
   }
 
+  Set<String> externalKeys() {
+    final rows = _db.select(
+      'SELECT source, external_id FROM entries '
+      "WHERE external_id IS NOT NULL AND external_id <> '';",
+    );
+    return {for (final row in rows) '${row['source']}|${row['external_id']}'};
+  }
+
   void deleteAll() {
     _db.execute('DELETE FROM entries;');
   }
 
   void close() {
-    _db.dispose();
+    _db.close();
   }
 
   LedgerEntry _fromRow(Row row) {

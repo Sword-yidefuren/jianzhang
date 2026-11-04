@@ -1,122 +1,252 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
-void main() {
-  runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+
+import 'app.dart';
+import 'data/ledger_entry.dart';
+import 'data/ledger_store.dart';
+import 'domain/categories.dart';
+import 'state/ledger_controller.dart';
+import 'ui/theme.dart';
+
+const _databaseOverride = String.fromEnvironment('JIANZHANG_DB_PATH');
+const _seedDemo = bool.fromEnvironment('JIANZHANG_SEED_DEMO');
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.card,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+
+  try {
+    final String path;
+    if (_databaseOverride.isNotEmpty) {
+      path = _databaseOverride;
+    } else {
+      final support = await getApplicationSupportDirectory();
+      path = p.join(support.path, 'jianzhang.sqlite');
+    }
+    File(path).parent.createSync(recursive: true);
+    final store = LedgerStore.open(path);
+    if (_seedDemo && store.totalCount() == 0) {
+      _insertDemoEntries(store, DateTime.now());
+    }
+    runApp(JianzhangApp(controller: LedgerController(store)));
+  } catch (error, stack) {
+    try {
+      final file = File(
+        p.join(Directory.systemTemp.path, 'jianzhang-startup-error.txt'),
+      );
+      file.writeAsStringSync('$error\n\n$stack');
+    } catch (_) {
+      // Nothing else we can do if even the temp directory is unavailable.
+    }
+    runApp(_StartupErrorApp(error: error));
+  }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _StartupErrorApp extends StatelessWidget {
+  const _StartupErrorApp({required this.error});
 
-  // This widget is the root of your application.
+  final Object error;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.storage_rounded,
+                    size: 40,
+                    color: AppColors.expense,
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    '账本打不开',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '$error',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.6,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '请确认应用数据目录可写，然后重新打开。',
+                    style: TextStyle(fontSize: 11, color: AppColors.faint),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+/// Development-only sample data used to preview the UI with a realistic month.
+void _insertDemoEntries(LedgerStore store, DateTime now) {
+  final stamp = now;
+  void add({
+    required DateTime at,
+    required EntryDirection direction,
+    required int cents,
+    required String category,
+    required String account,
+    String merchant = '',
+    String note = '',
+    String source = 'manual',
+  }) {
+    store.insert(
+      LedgerEntry(
+        occurredAt: at,
+        direction: direction,
+        amountCents: cents,
+        category: category,
+        account: account,
+        merchant: merchant,
+        note: note,
+        source: source,
+        createdAt: stamp,
+        updatedAt: stamp,
       ),
     );
   }
+
+  final thisMonth = DateTime(now.year, now.month);
+  final lastMonth = DateTime(now.year, now.month - 1);
+
+  add(
+    at: thisMonth.add(const Duration(hours: 9)),
+    direction: EntryDirection.income,
+    cents: 1200000,
+    category: '工资',
+    account: '银行卡',
+    note: '本月工资',
+  );
+  add(
+    at: thisMonth.add(const Duration(hours: 10)),
+    direction: EntryDirection.expense,
+    cents: 320000,
+    category: '居住',
+    account: '银行卡',
+    note: '房租',
+  );
+  add(
+    at: thisMonth.add(const Duration(days: 1, hours: 12, minutes: 20)),
+    direction: EntryDirection.expense,
+    cents: 3250,
+    category: '餐饮',
+    account: '微信',
+    merchant: '老乡鸡',
+    note: '午饭',
+    source: 'wechat',
+  );
+  add(
+    at: thisMonth.add(const Duration(days: 2, hours: 9, minutes: 10)),
+    direction: EntryDirection.expense,
+    cents: 1800,
+    category: '餐饮',
+    account: '支付宝',
+    merchant: 'Manner',
+    note: '咖啡',
+    source: 'alipay',
+  );
+  add(
+    at: thisMonth.add(const Duration(days: 3, hours: 8, minutes: 45)),
+    direction: EntryDirection.expense,
+    cents: 600,
+    category: '交通',
+    account: '支付宝',
+    merchant: '地铁',
+    source: 'alipay',
+  );
+  add(
+    at: thisMonth.add(const Duration(days: 3, hours: 19, minutes: 5)),
+    direction: EntryDirection.expense,
+    cents: 12860,
+    category: '购物',
+    account: '微信',
+    merchant: '盒马',
+    note: '日用品',
+    source: 'wechat',
+  );
+  add(
+    at: thisMonth.add(const Duration(days: 3, hours: 21)),
+    direction: EntryDirection.income,
+    cents: 20000,
+    category: '人情',
+    account: '微信',
+    note: '红包',
+    source: 'wechat',
+  );
+
+  add(
+    at: lastMonth.add(const Duration(days: 4, hours: 10)),
+    direction: EntryDirection.expense,
+    cents: 280000,
+    category: '居住',
+    account: '银行卡',
+    note: '房租',
+  );
+  add(
+    at: lastMonth.add(const Duration(days: 7, hours: 18, minutes: 30)),
+    direction: EntryDirection.expense,
+    cents: 42000,
+    category: '餐饮',
+    account: '微信',
+    merchant: '朋友聚餐',
+    source: 'wechat',
+  );
+  add(
+    at: lastMonth.add(const Duration(days: 11, hours: 22)),
+    direction: EntryDirection.expense,
+    cents: 8900,
+    category: '交通',
+    account: '支付宝',
+    merchant: '滴滴',
+    source: 'alipay',
+  );
+  add(
+    at: lastMonth.add(const Duration(days: 17, hours: 15)),
+    direction: EntryDirection.income,
+    cents: 50000,
+    category: '兼职',
+    account: '支付宝',
+    note: '稿费',
+    source: 'alipay',
+  );
+  add(
+    at: lastMonth.add(const Duration(days: 21, hours: 16)),
+    direction: EntryDirection.expense,
+    cents: 39900,
+    category: '购物',
+    account: '支付宝',
+    merchant: '运动鞋',
+    source: 'alipay',
+  );
 }
