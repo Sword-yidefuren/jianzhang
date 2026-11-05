@@ -474,12 +474,7 @@ class _EntryFormState extends State<EntryForm> {
             ),
           ),
           Container(
-            padding: EdgeInsets.fromLTRB(
-              24,
-              12,
-              24,
-              16 + (bottomInset > 0 ? bottomInset : 0),
-            ),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
             decoration: const BoxDecoration(
               color: AppColors.card,
               border: Border(top: BorderSide(color: AppColors.line)),

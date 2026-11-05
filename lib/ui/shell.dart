@@ -19,21 +19,16 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
-  late final List<Widget> _pages;
 
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      HomePage(
-        controller: widget.controller,
-        onOpenTransactions: () => setState(() => _index = 1),
-      ),
-      TransactionsPage(controller: widget.controller),
-      StatsPage(controller: widget.controller),
-      SettingsPage(controller: widget.controller),
-    ];
-  }
+  List<Widget> _buildPages() => [
+    HomePage(
+      controller: widget.controller,
+      onOpenTransactions: () => setState(() => _index = 1),
+    ),
+    TransactionsPage(controller: widget.controller),
+    StatsPage(controller: widget.controller),
+    SettingsPage(controller: widget.controller),
+  ];
 
   void _openNewEntry() {
     showEntryEditor(context, widget.controller);
@@ -45,7 +40,7 @@ class _AppShellState extends State<AppShell> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
-        final body = IndexedStack(index: _index, children: _pages);
+        final body = IndexedStack(index: _index, children: _buildPages());
         if (!wide) {
           return Scaffold(
             body: body,

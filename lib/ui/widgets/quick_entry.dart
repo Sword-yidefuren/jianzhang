@@ -66,6 +66,8 @@ class _QuickEntryState extends State<QuickEntry> {
         content: Text(
           '已记下 ${parsed.direction.label} ${Money.format(parsed.amountCents)} · ${parsed.category}',
         ),
+        duration: const Duration(seconds: 4),
+        persist: false,
         action: SnackBarAction(
           label: '撤销',
           onPressed: () => widget.controller.deleteEntry(id),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqlite3/sqlite3.dart' show SqliteException;
 
 import 'app.dart';
 import 'data/ledger_entry.dart';
@@ -27,31 +28,65 @@ Future<void> main() async {
     ),
   );
 
-  try {
-    final String path;
-    if (_databaseOverride.isNotEmpty) {
-      path = _databaseOverride;
-    } else {
-      final support = await getApplicationSupportDirectory();
-      path = p.join(support.path, 'jianzhang.sqlite');
-    }
-    File(path).parent.createSync(recursive: true);
-    final store = LedgerStore.open(path);
-    if (_seedDemo && store.totalCount() == 0) {
-      _insertDemoEntries(store, DateTime.now());
-    }
-    runApp(JianzhangApp(controller: LedgerController(store)));
-  } catch (error, stack) {
+  Object? lastError;
+  StackTrace? lastStack;
+  for (final path in await _databasePaths()) {
     try {
-      final file = File(
-        p.join(Directory.systemTemp.path, 'jianzhang-startup-error.txt'),
-      );
-      file.writeAsStringSync('$error\n\n$stack');
-    } catch (_) {
-      // Nothing else we can do if even the temp directory is unavailable.
+      File(path).parent.createSync(recursive: true);
+      final store = LedgerStore.open(path);
+      if (_seedDemo && store.totalCount() == 0) {
+        _insertDemoEntries(store, DateTime.now());
+      }
+      runApp(JianzhangApp(controller: LedgerController(store)));
+      return;
+    } catch (error, stack) {
+      lastError = error;
+      lastStack = stack;
+      if (!_isAccessFailure(error)) break;
     }
-    runApp(_StartupErrorApp(error: error));
   }
+
+  final error = lastError ?? StateError('没有可用的数据目录');
+  try {
+    final file = File(
+      p.join(Directory.systemTemp.path, 'jianzhang-startup-error.txt'),
+    );
+    file.writeAsStringSync('$error\n\n${lastStack ?? ''}');
+  } catch (_) {
+    // Nothing else we can do if even the temp directory is unavailable.
+  }
+  runApp(_StartupErrorApp(error: error));
+}
+
+Future<List<String>> _databasePaths() async {
+  if (_databaseOverride.isNotEmpty) return [_databaseOverride];
+
+  final paths = <String>[];
+  try {
+    final support = await getApplicationSupportDirectory();
+    paths.add(p.join(support.path, 'jianzhang.sqlite'));
+  } catch (_) {
+    // Fall through to the portable locations below.
+  }
+  if (Platform.isWindows) {
+    final exeDir = File(Platform.resolvedExecutable).parent.path;
+    paths.add(p.join(exeDir, 'data', 'jianzhang.sqlite'));
+    final localAppData = Platform.environment['LOCALAPPDATA'];
+    if (localAppData != null && localAppData.isNotEmpty) {
+      paths.add(p.join(localAppData, 'Sword', 'jianzhang', 'jianzhang.sqlite'));
+    }
+  }
+  paths.add(p.join(Directory.systemTemp.path, 'jianzhang', 'jianzhang.sqlite'));
+  return paths;
+}
+
+bool _isAccessFailure(Object error) {
+  if (error is FileSystemException) return true;
+  if (error is SqliteException) {
+    final code = error.resultCode;
+    return code == 5 || code == 8 || code == 14;
+  }
+  return false;
 }
 
 class _StartupErrorApp extends StatelessWidget {
