@@ -70,7 +70,7 @@ Future<List<String>> _databasePaths() async {
   }
   if (Platform.isWindows) {
     final exeDir = File(Platform.resolvedExecutable).parent.path;
-    paths.add(p.join(exeDir, 'data', 'jianzhang.sqlite'));
+    paths.add(p.join(exeDir, 'jianzhang-data', 'jianzhang.sqlite'));
     final localAppData = Platform.environment['LOCALAPPDATA'];
     if (localAppData != null && localAppData.isNotEmpty) {
       paths.add(p.join(localAppData, 'Sword', 'jianzhang', 'jianzhang.sqlite'));

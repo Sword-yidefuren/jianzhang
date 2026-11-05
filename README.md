@@ -22,7 +22,7 @@
 
 运行 `dist/windows/jianzhang.exe`，整个 `dist/windows` 目录一起拷贝，不要只拿 exe。
 
-Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本。如果该目录不可写，会自动退到 exe 同级的 `data\jianzhang.sqlite`，设置页会显示实际路径。
+Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本。如果该目录不可写，会自动退到 exe 同级的 `jianzhang-data\jianzhang.sqlite`，设置页会显示实际路径。
 
 ## 账单导入
 
