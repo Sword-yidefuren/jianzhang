@@ -32,6 +32,8 @@ Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本�
 
 不要直接把微信的加密 ZIP 拖进来；App 只接收解压后的 CSV、TXT 或 .xlsx。旧版二进制 `.xls` 不支持，请在 Excel/WPS 里另存为 `.xlsx` 或 CSV。
 
+![Excel 账单导入预览](docs/images/android-xlsx.png)
+
 ## 数据
 
 - 金额一律以整数分存储，避免浮点误差。

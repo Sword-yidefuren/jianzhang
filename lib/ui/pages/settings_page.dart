@@ -225,7 +225,7 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               _SettingRow(
                 icon: Icons.info_outline_rounded,
-                title: '简账 1.0.0',
+                title: '简账 1.1.0',
                 subtitle: '本地优先的中文记账本',
               ),
               const Divider(height: 1, indent: 66),
