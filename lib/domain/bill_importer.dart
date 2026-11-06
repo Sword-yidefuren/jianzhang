@@ -8,6 +8,7 @@ import '../core/dates.dart';
 import '../core/money.dart';
 import '../data/ledger_entry.dart';
 import 'categories.dart';
+import 'xlsx_sheet.dart';
 
 enum BillSource { wechat, alipay }
 
@@ -50,7 +51,7 @@ class BillParseResult {
       .fold(0, (sum, entry) => sum + entry.amountCents);
 }
 
-/// 只解析官方账单导出的 CSV，不联网、不落原文件。
+/// 解析官方账单导出的 CSV / XLSX，不联网、不落原文件。
 class BillImporter {
   const BillImporter._();
 
@@ -62,25 +63,48 @@ class BillImporter {
     if (bytes.isEmpty) {
       throw const BillImportException('文件是空的');
     }
-    final text = _decode(bytes);
-    final source = _detectSource(text);
-    final header = _findHeader(text, source);
-    if (header == null) {
-      throw const BillImportException('找不到账单表头，请确认是微信/支付宝导出的 CSV');
+
+    final isZip = bytes.length >= 4 && bytes[0] == 0x50 && bytes[1] == 0x4B;
+    late final List<List<String>> rows;
+    late final int headerRow;
+    late final BillSource source;
+
+    if (isZip) {
+      try {
+        rows = XlsxSheet.readFirstSheet(bytes);
+      } on XlsxSheetException {
+        throw const BillImportException(
+          '这是压缩包，或不是有效的 Excel 文件；请解压出 CSV，或选择 .xlsx 账单',
+        );
+      }
+      final probe = rows.take(60).map((row) => row.join(' ')).join('\n');
+      source = _detectSource(probe, fileName: fileName);
+      final found = _findHeaderRow(rows);
+      if (found == null) {
+        throw const BillImportException('找不到账单表头，请确认是微信/支付宝导出的 Excel');
+      }
+      headerRow = found;
+    } else {
+      final text = _decode(bytes);
+      source = _detectSource(text, fileName: fileName);
+      final header = _findHeader(text);
+      if (header == null) {
+        throw const BillImportException('找不到账单表头，请确认是微信/支付宝导出的 CSV');
+      }
+      final lines = text.split(RegExp(r'\r?\n'));
+      final section = lines.sublist(header.lineIndex).join('\n');
+      rows = Csv(fieldDelimiter: ',', autoDetect: false, skipEmptyLines: true)
+          .decode(section)
+          .map((row) => row.map((cell) => cell.toString()).toList())
+          .toList();
+      headerRow = 0;
     }
 
-    final lines = text.split(RegExp(r'\r?\n'));
-    final section = lines.sublist(header.lineIndex).join('\n');
-    final rows = Csv(
-      fieldDelimiter: ',',
-      autoDetect: false,
-      skipEmptyLines: true,
-    ).decode(section);
-    if (rows.length < 2) {
+    if (rows.length <= headerRow + 1) {
       throw const BillImportException('账单里没有可读取的交易行');
     }
 
-    final headers = rows.first
+    final headers = rows[headerRow]
         .map((cell) => _normalizeHeader(cell.toString()))
         .toList();
     final index = _ColumnIndex(headers, source);
@@ -93,10 +117,10 @@ class BillImporter {
     var totalRows = 0;
     var skippedRows = 0;
 
-    for (final row in rows.skip(1)) {
+    for (final row in rows.skip(headerRow + 1)) {
       final cells = row.map((cell) => cell.toString().trim()).toList();
       if (cells.length <= index.time) continue;
-      final occurredAt = parseBillDate(cells[index.time]);
+      final occurredAt = _parseOccurredAt(cells[index.time]);
       if (occurredAt == null) continue;
       totalRows++;
 
@@ -182,42 +206,68 @@ class BillImporter {
     }
   }
 
-  static BillSource _detectSource(String text) {
+  static BillSource _detectSource(String text, {String fileName = ''}) {
     final head = text.length > 4000 ? text.substring(0, 4000) : text;
+    final haystack = '$fileName\n$head';
     final wechatScore = [
       '微信支付账单',
       '微信昵称',
       '微信支付',
       '商户单号',
-    ].where(head.contains).length;
+    ].where(haystack.contains).length;
     final alipayScore = [
       '支付宝',
       '交易创建时间',
       '商家订单号',
       '支付宝交易记录',
-    ].where(head.contains).length;
+    ].where(haystack.contains).length;
     if (wechatScore == 0 && alipayScore == 0) {
+      if (haystack.contains('交易单号')) return BillSource.wechat;
+      if (haystack.contains('交易号')) return BillSource.alipay;
       throw const BillImportException('认不出这是微信还是支付宝的账单');
     }
     return wechatScore >= alipayScore ? BillSource.wechat : BillSource.alipay;
   }
 
-  static _HeaderLocation? _findHeader(String text, BillSource source) {
+  static _HeaderLocation? _findHeader(String text) {
     final lines = text.split(RegExp(r'\r?\n'));
     for (var i = 0; i < lines.length; i++) {
-      final normalized = _normalizeHeader(lines[i]);
-      final hasTime =
-          normalized.contains('交易时间') ||
-          normalized.contains('交易创建时间') ||
-          normalized.contains('付款时间');
-      final hasAmount =
-          normalized.contains('金额(元)') || normalized.contains('金额');
-      final hasDirection = normalized.contains('收/支');
-      if (hasTime && hasAmount && hasDirection) {
+      if (_isHeaderLine(_normalizeHeader(lines[i]))) {
         return _HeaderLocation(i);
       }
     }
     return null;
+  }
+
+  static int? _findHeaderRow(List<List<String>> rows) {
+    for (var i = 0; i < rows.length; i++) {
+      final normalized = rows[i].map(_normalizeHeader).join('|');
+      if (_isHeaderLine(normalized)) return i;
+    }
+    return null;
+  }
+
+  static bool _isHeaderLine(String normalized) {
+    final hasTime =
+        normalized.contains('交易时间') ||
+        normalized.contains('交易创建时间') ||
+        normalized.contains('付款时间');
+    final hasAmount = normalized.contains('金额(元)') || normalized.contains('金额');
+    final hasDirection = normalized.contains('收/支');
+    return hasTime && hasAmount && hasDirection;
+  }
+
+  static DateTime? _parseOccurredAt(String raw) {
+    final parsed = parseBillDate(raw);
+    if (parsed != null) return parsed;
+    // 有些 Excel 把时间存成序列值，例如 45678.5。
+    final serial = double.tryParse(raw);
+    if (serial == null || serial < 20000 || serial > 80000) return null;
+    return DateTime(
+      1899,
+      12,
+      30,
+    ).add(Duration(microseconds: (serial * 86400 * 1000000).round()));
   }
 
   static String _normalizeHeader(String value) => value

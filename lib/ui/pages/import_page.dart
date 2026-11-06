@@ -31,9 +31,9 @@ class _ImportPageState extends State<ImportPage> {
     });
     try {
       final files = await FilePicker.pickFiles(
-        dialogTitle: '选择微信 / 支付宝账单 CSV',
+        dialogTitle: '选择微信 / 支付宝账单',
         type: FileType.custom,
-        allowedExtensions: const ['csv', 'txt'],
+        allowedExtensions: const ['csv', 'txt', 'xlsx'],
       );
       if (files.isEmpty) {
         if (mounted) setState(() => _picking = false);
@@ -44,10 +44,6 @@ class _ImportPageState extends State<ImportPage> {
       for (final file in files) {
         try {
           final bytes = await file.readAsBytes();
-          if (bytes.length >= 2 && bytes[0] == 0x50 && bytes[1] == 0x4B) {
-            errors.add('${file.name}：这是压缩包，请先解压出 CSV 再导入');
-            continue;
-          }
           results.add(BillImporter.parseBytes(bytes, fileName: file.name));
         } on BillImportException catch (error) {
           errors.add('${file.name}：${error.message}');
@@ -146,7 +142,7 @@ class _ImportPageState extends State<ImportPage> {
               const PageHeader(
                 kicker: 'Import',
                 title: '把账单搬进来',
-                subtitle: '支持微信支付、支付宝导出的 CSV；自动分类，并按交易单号去重。',
+                subtitle: '支持微信支付、支付宝导出的 CSV / Excel（.xlsx）；自动分类，并按交易单号去重。',
               ),
               const SizedBox(height: 20),
               const _HowToCard(),
@@ -270,8 +266,8 @@ class _HowToCard extends StatelessWidget {
           const SizedBox(height: 12),
           const _Step(
             number: '03',
-            title: '解压得到 CSV',
-            detail: '微信账单是加密 ZIP，先用邮件里的解压码在系统里解压，再来这里选 CSV。',
+            title: '解压得到 CSV 或 Excel',
+            detail: '微信账单是加密 ZIP，先用邮件里的解压码在系统里解压，再来这里选 CSV 或 .xlsx。',
           ),
           const SizedBox(height: 14),
           Container(
@@ -292,7 +288,7 @@ class _HowToCard extends StatelessWidget {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'App 不保存压缩包、邮箱或解压码。选择 CSV 后只在内存里解析，不保留原文件。',
+                    'App 不保存压缩包、邮箱或解压码。选择 CSV / Excel 后只在内存里解析，不保留原文件。',
                     style: TextStyle(
                       fontSize: 11,
                       color: AppColors.muted,
@@ -423,8 +419,8 @@ class _PickerCard extends StatelessWidget {
               picking
                   ? '正在读取…'
                   : hasResults
-                  ? '重新选择 CSV'
-                  : '选择 CSV 文件',
+                  ? '重新选择账单'
+                  : '选择账单文件',
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
@@ -432,7 +428,7 @@ class _PickerCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             const Text(
-              '微信 / 支付宝账单，可一次选多个',
+              '支持 CSV / Excel，可一次选多个',
               style: TextStyle(fontSize: 11, color: AppColors.faint),
             ),
           ],

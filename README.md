@@ -7,7 +7,7 @@
 ## 功能
 
 - **一句话记账**：输入「午饭 25 微信」「昨天打车 18.5 支付宝」「工资 12000」，自动解析金额、收支方向、分类、账户和日期。
-- **官方账单导入**：支持微信支付、支付宝导出的 CSV；自动识别表头、UTF-8/GBK 编码，按交易单号去重，导入前可预览。
+- **官方账单导入**：支持微信支付、支付宝导出的 CSV / Excel（.xlsx）；自动识别表头和编码，按交易单号去重，导入前可预览。
 - **明细与统计**：按月查看、按收支筛选、搜索商家/备注/分类/账户，左滑删除；统计页有分类占比和近 6 个月趋势。
 - **本地优先**：SQLite 单文件账本，无账号、无云同步、无埋点；导入的原始文件只在内存解析，不保留副本。
 - **响应式界面**：手机底部导航，Windows 宽屏侧栏。
@@ -16,11 +16,11 @@
 
 ### Android
 
-下载 [简账-1.0.0.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.0.0/jianzhang-1.0.0.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
+下载 [简账-1.1.0.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.0/jianzhang-1.1.0.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
 
 ### Windows
 
-下载 [简账-1.0.0-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.0.0/jianzhang-1.0.0-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
+下载 [简账-1.1.0-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.0/jianzhang-1.1.0-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
 
 Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本。如果该目录不可写，会自动退到 exe 同级的 `jianzhang-data\jianzhang.sqlite`，设置页会显示实际路径。
 
@@ -28,9 +28,9 @@ Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本�
 
 1. 微信：我 → 服务 → 钱包 → 账单 → 常见问题 → 下载账单 → 用于个人对账；账单是加密 ZIP，先用邮件里的解压码解压。
 2. 支付宝：我的 → 账单 → 右上角更多 → 开具交易流水证明；或在电脑端下载余额收支明细。
-3. 得到 CSV 后，在「设置 → 导入微信 / 支付宝账单」选择文件，确认预览，再导入。
+3. 得到 CSV 或 .xlsx 后，在「设置 → 导入微信 / 支付宝账单」选择文件，确认预览，再导入。
 
-不要直接把加密 ZIP 拖进来；App 只接收解压后的 CSV/TXT。
+不要直接把微信的加密 ZIP 拖进来；App 只接收解压后的 CSV、TXT 或 .xlsx。旧版二进制 `.xls` 不支持，请在 Excel/WPS 里另存为 `.xlsx` 或 CSV。
 
 ## 数据
 
@@ -41,7 +41,7 @@ Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本�
 
 ## 边界
 
-- **不做实时同步**。微信/支付宝没有开放个人账单实时接口，1.0 只做官方导出文件导入和手动一句话记账。
+- **不做实时同步**。微信/支付宝没有开放个人账单实时接口，当前只做官方导出文件（CSV / Excel）导入和手动一句话记账。
 - 不做无障碍点击、通知监听、后台抓取。
 - 分类是离线关键词规则，导入后可在明细里改分类或删除。
 

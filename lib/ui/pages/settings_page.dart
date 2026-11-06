@@ -105,7 +105,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SizedBox(height: 12),
               Text(
-                '所以这里走官方路径：你在微信/支付宝里导出账单 CSV，App 负责解析、分类、去重。一次导出可以导入几个月，日常再用一句话补记。',
+                '所以这里走官方路径：你在微信/支付宝里导出账单 CSV 或 Excel，App 负责解析、分类、去重。一次导出可以导入几个月，日常再用一句话补记。',
                 style: TextStyle(fontSize: 13, height: 1.65),
               ),
               SizedBox(height: 12),
@@ -148,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _SettingRow(
                 icon: Icons.file_download_outlined,
                 title: '导入微信 / 支付宝账单',
-                subtitle: '官方 CSV，自动分类与去重',
+                subtitle: '官方 CSV / Excel，自动分类与去重',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (context) => ImportPage(controller: controller),
