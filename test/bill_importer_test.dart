@@ -33,6 +33,14 @@ const alipayCsv = '''
 2026100222002,SHOP2,2026-10-02 08:00:00,2026-10-02 08:00:00,2026-10-02 08:00:00,其他,转账,公司,工资,12000.00,收入,交易成功,0.00,0.00,9月工资,已收入
 ''';
 
+const alipayNewCsv = '''
+支付宝支付科技有限公司 电子客户回单
+交易时间,交易分类,交易对方,对方账号,商品说明,收/支,金额,收/付款方式,交易状态,交易订单号,商家订单号,备注
+2026-11-01 10:00:00,转账红包,李琳琳,李琳琳189******83,转账,支出,18.00,建设银行储蓄卡,交易成功,202611010020C65126600000482200007895279904623900,202611010020,/
+2026-11-01 12:00:00,餐饮美食,称重现炒智慧,/,称重现炒智慧,支出,13.03,建设银行储蓄卡,交易成功,202611012300113110600726110660166013532536,202611012300,/
+2026-11-02 09:00:00,转账红包,李琳琳,李琳琳189******83,转账,收入,130.00,账户余额,交易成功,2026110200561266000048180000SAAS34486561202611051821096731,202611020056,/
+''';
+
 void main() {
   test('微信账单：定位表头、跳过不计收支、按关键词分类', () {
     final result = BillImporter.parseBytes(
@@ -71,6 +79,24 @@ void main() {
     expect(result.source, BillSource.alipay);
     expect(result.importableCount, 2);
     expect(result.entries.first.merchant, '淘宝商家');
+  });
+
+  test('支付宝新版 CSV：交易订单号、交易分类和金额列', () {
+    final result = BillImporter.parseBytes(
+      Uint8List.fromList(utf8.encode(alipayNewCsv)),
+      fileName: '支付宝账单.csv',
+    );
+    expect(result.source, BillSource.alipay);
+    expect(result.importableCount, 3);
+    expect(result.expenseCents, 3103);
+    expect(result.incomeCents, 13000);
+    expect(
+      result.entries.first.externalId,
+      '202611010020C65126600000482200007895279904623900',
+    );
+    expect(result.entries.first.merchant, '李琳琳');
+    expect(result.entries[1].amountCents, 1303);
+    expect(result.entries[2].direction, EntryDirection.income);
   });
 
   test('缺少表头时报错', () {

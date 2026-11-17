@@ -219,10 +219,14 @@ class BillImporter {
       '支付宝',
       '交易创建时间',
       '商家订单号',
+      '交易订单号',
       '支付宝交易记录',
     ].where(haystack.contains).length;
     if (wechatScore == 0 && alipayScore == 0) {
       if (haystack.contains('交易单号')) return BillSource.wechat;
+      if (haystack.contains('交易订单号') || haystack.contains('商家订单号')) {
+        return BillSource.alipay;
+      }
       if (haystack.contains('交易号')) return BillSource.alipay;
       throw const BillImportException('认不出这是微信还是支付宝的账单');
     }
@@ -312,13 +316,13 @@ class _ColumnIndex {
     amount = _find(headers, ['金额(元)', '金额']);
     merchant = _find(headers, ['交易对方', '对方']);
     product = source == BillSource.wechat
-        ? _find(headers, ['商品', '商品名称'])
-        : _find(headers, ['商品名称', '商品']);
+        ? _find(headers, ['商品', '商品名称', '商品说明'])
+        : _find(headers, ['商品名称', '商品说明', '商品']);
     externalId = source == BillSource.wechat
-        ? _find(headers, ['交易单号'])
-        : _find(headers, ['交易号']);
+        ? _find(headers, ['交易单号', '交易订单号'])
+        : _find(headers, ['交易订单号', '交易号']);
     status = _find(headers, ['当前状态', '交易状态']);
-    type = _find(headers, ['交易类型', '类型']);
+    type = _find(headers, ['交易类型', '交易分类', '类型']);
     remark = _find(headers, ['备注']);
   }
 
@@ -339,7 +343,7 @@ class _ColumnIndex {
     if (time < 0) '交易时间',
     if (direction < 0) '收/支',
     if (amount < 0) '金额',
-    if (externalId < 0) '交易单号',
+    if (externalId < 0) '交易单号/交易订单号',
   ];
 
   String value(List<String> cells, int index) {

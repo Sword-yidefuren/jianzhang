@@ -16,11 +16,11 @@
 
 ### Android
 
-下载 [简账-1.1.0.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.0/jianzhang-1.1.0.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
+下载 [简账-1.1.1.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.1/jianzhang-1.1.1.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
 
 ### Windows
 
-下载 [简账-1.1.0-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.0/jianzhang-1.1.0-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
+下载 [简账-1.1.1-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.1/jianzhang-1.1.1-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
 
 Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本。如果该目录不可写，会自动退到 exe 同级的 `jianzhang-data\jianzhang.sqlite`，设置页会显示实际路径。
 
