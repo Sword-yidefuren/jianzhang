@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../state/ledger_controller.dart';
 import 'pages/home_page.dart';
+import 'pages/savings_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/stats_page.dart';
 import 'pages/transactions_page.dart';
@@ -24,9 +25,11 @@ class _AppShellState extends State<AppShell> {
     HomePage(
       controller: widget.controller,
       onOpenTransactions: () => setState(() => _index = 1),
+      onOpenSavings: () => setState(() => _index = 3),
     ),
     TransactionsPage(controller: widget.controller),
     StatsPage(controller: widget.controller),
+    SavingsPage(controller: widget.controller),
     SettingsPage(controller: widget.controller),
   ];
 
@@ -68,6 +71,11 @@ class _AppShellState extends State<AppShell> {
                     icon: Icon(Icons.insights_outlined),
                     selectedIcon: Icon(Icons.insights_rounded),
                     label: '统计',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.savings_outlined),
+                    selectedIcon: Icon(Icons.savings_rounded),
+                    label: '存钱',
                   ),
                   NavigationDestination(
                     icon: Icon(Icons.settings_outlined),
@@ -116,6 +124,7 @@ class _Sidebar extends StatelessWidget {
       (Icons.edit_note_rounded, '记账'),
       (Icons.receipt_long_rounded, '明细'),
       (Icons.insights_rounded, '统计'),
+      (Icons.savings_rounded, '存钱'),
       (Icons.settings_rounded, '设置'),
     ];
     return Container(

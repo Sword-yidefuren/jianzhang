@@ -55,7 +55,7 @@ void _expectNoLayoutError(WidgetTester tester) {
 }
 
 void main() {
-  testWidgets('桌面端四个页面都能切换且不溢出', (tester) async {
+  testWidgets('桌面端五个页面都能切换且不溢出', (tester) async {
     final controller = _controller();
     await _pumpApp(tester, controller, size: const Size(1280, 820));
 
@@ -72,13 +72,18 @@ void main() {
     expect(find.text('INSIGHTS'), findsOneWidget);
     _expectNoLayoutError(tester);
 
+    await tester.tap(find.text('存钱').first);
+    await tester.pumpAndSettle();
+    expect(find.text('SAVINGS'), findsOneWidget);
+    _expectNoLayoutError(tester);
+
     await tester.tap(find.text('设置').first);
     await tester.pumpAndSettle();
     expect(find.text('SETTINGS'), findsOneWidget);
     _expectNoLayoutError(tester);
   });
 
-  testWidgets('手机端四个页面都能切换且不溢出', (tester) async {
+  testWidgets('手机端五个页面都能切换且不溢出', (tester) async {
     final controller = _controller();
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
@@ -95,9 +100,32 @@ void main() {
     expect(find.text('INSIGHTS'), findsOneWidget);
     _expectNoLayoutError(tester);
 
+    await tester.tap(find.text('存钱'));
+    await tester.pumpAndSettle();
+    expect(find.text('SAVINGS'), findsOneWidget);
+    _expectNoLayoutError(tester);
+
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
     expect(find.text('SETTINGS'), findsOneWidget);
+    _expectNoLayoutError(tester);
+  });
+
+  testWidgets('首页显示存钱目标进度，存钱页可查看目标', (tester) async {
+    final controller = _controller();
+    controller.setMonthGoal(1000000);
+    controller.setSavingsSlogan('存够钱买手机');
+    await _pumpApp(tester, controller, size: const Size(430, 900));
+
+    expect(find.textContaining('离目标还差'), findsOneWidget);
+    _expectNoLayoutError(tester);
+
+    await tester.tap(find.text('存钱'));
+    await tester.pumpAndSettle();
+    expect(find.text('SAVINGS'), findsOneWidget);
+    expect(find.text('存够钱买手机'), findsOneWidget);
+    expect(find.text('存钱目标'), findsOneWidget);
+    expect(find.text('本月目标'), findsOneWidget);
     _expectNoLayoutError(tester);
   });
 

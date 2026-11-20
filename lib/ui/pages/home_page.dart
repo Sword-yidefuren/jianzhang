@@ -16,10 +16,12 @@ class HomePage extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onOpenTransactions,
+    required this.onOpenSavings,
   });
 
   final LedgerController controller;
   final VoidCallback onOpenTransactions;
+  final VoidCallback onOpenSavings;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +56,7 @@ class HomePage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _SummaryCard(controller: controller),
+        _SummaryCard(controller: controller, onOpenSavings: onOpenSavings),
         const SizedBox(height: 16),
         QuickEntry(controller: controller),
         const SizedBox(height: 16),
@@ -128,9 +130,10 @@ class HomePage extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.controller});
+  const _SummaryCard({required this.controller, required this.onOpenSavings});
 
   final LedgerController controller;
+  final VoidCallback onOpenSavings;
 
   @override
   Widget build(BuildContext context) {
@@ -202,6 +205,10 @@ class _SummaryCard extends StatelessWidget {
               height: 1.5,
             ),
           ),
+          if (controller.isCurrentMonth) ...[
+            const SizedBox(height: 10),
+            _SavingsLine(controller: controller, onTap: onOpenSavings),
+          ],
           const SizedBox(height: 20),
           Container(height: 1, color: Colors.white.withValues(alpha: 0.11)),
           const SizedBox(height: 16),
@@ -251,6 +258,72 @@ class _SummaryCard extends StatelessWidget {
     if (top == null) return '每一笔都算数。';
     final percent = (top.amountCents / summary.expenseCents * 100).round();
     return '最大头是${top.category}，占本月支出的 $percent%。';
+  }
+}
+
+class _SavingsLine extends StatelessWidget {
+  const _SavingsLine({required this.controller, required this.onTap});
+
+  final LedgerController controller;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final goal = controller.monthGoalCents;
+    final net = controller.summary.netCents;
+    if (goal <= 0) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 2),
+          child: Text(
+            '还没有存钱目标，去存钱页设一个 →',
+            style: TextStyle(
+              fontSize: 11,
+              color: Color(0xFFDCD7CB),
+              height: 1.4,
+            ),
+          ),
+        ),
+      );
+    }
+    final met = net >= goal;
+    final color = met ? const Color(0xFFD7E4DB) : const Color(0xFFF0C9B9);
+    final gap = goal - net;
+    final saved = net < 0
+        ? '本月结余 ${Money.format(net)}'
+        : '本月已存 ${Money.format(net)}';
+    final comparison = met
+        ? '超过目标 ${Money.format(-gap)}'
+        : '离目标还差 ${Money.format(gap)}';
+    final progress = (net / goal).clamp(0.0, 1.0).toDouble();
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$saved，$comparison',
+              style: TextStyle(fontSize: 11, color: color, height: 1.4),
+            ),
+            const SizedBox(height: 7),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                minHeight: 3,
+                value: progress,
+                backgroundColor: Colors.white.withValues(alpha: 0.12),
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

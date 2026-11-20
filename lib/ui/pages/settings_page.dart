@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/dates.dart';
+import '../../core/money.dart';
 import '../../domain/categories.dart';
 import '../../state/ledger_controller.dart';
 import '../pages/import_page.dart';
@@ -89,6 +90,91 @@ class _SettingsPageState extends State<SettingsPage> {
         .showSnackBar(const SnackBar(content: Text('账本已清空')));
   }
 
+  Future<void> _editSalary() async {
+    final controller = widget.controller;
+    final amount = TextEditingController(
+      text: controller.salaryCents > 0
+          ? Money.inputValue(controller.salaryCents)
+          : '',
+    );
+    var enabled = controller.salaryEnabled;
+    String? error;
+    var resultCents = controller.salaryCents;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('固定月收入'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(child: Text('每月自动计入收入')),
+                  Switch(
+                    value: enabled,
+                    onChanged: (value) => setDialogState(() {
+                      enabled = value;
+                      error = null;
+                    }),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: amount,
+                enabled: enabled,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  prefixText: '¥ ',
+                  labelText: '月收入',
+                  errorText: error,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '开启后每月 1 号自动生成一笔“工资”收入；关闭后不再新增，已生成的收入不会删除。',
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.55,
+                  color: AppColors.muted,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (enabled) {
+                  final cents = Money.tryParseToCents(amount.text.trim());
+                  if (cents == null || cents <= 0) {
+                    setDialogState(() => error = '请输入大于 0 的金额');
+                    return;
+                  }
+                  resultCents = cents;
+                }
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      ),
+    );
+    amount.dispose();
+    if (saved != true || !mounted) return;
+    controller.saveSalarySettings(enabled: enabled, cents: resultCents);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(enabled ? '固定收入已开启' : '固定收入已关闭')));
+  }
+
   void _showSyncExplanation() {
     showDialog<void>(
       context: context,
@@ -145,6 +231,15 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
+              _SettingRow(
+                icon: Icons.account_balance_wallet_outlined,
+                title: '固定月收入',
+                subtitle: controller.salaryEnabled
+                    ? '每月 1 号自动计入 ${Money.format(controller.salaryCents)}'
+                    : '未开启，收入手动记录',
+                onTap: _editSalary,
+              ),
+              const Divider(height: 1, indent: 66),
               _SettingRow(
                 icon: Icons.file_download_outlined,
                 title: '导入微信 / 支付宝账单',
@@ -225,7 +320,7 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               _SettingRow(
                 icon: Icons.info_outline_rounded,
-                title: '简账 1.1.1',
+                title: '简账 1.2.0',
                 subtitle: '本地优先的中文记账本',
               ),
               const Divider(height: 1, indent: 66),

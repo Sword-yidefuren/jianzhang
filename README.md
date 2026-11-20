@@ -8,6 +8,7 @@
 
 - **一句话记账**：输入「午饭 25 微信」「昨天打车 18.5 支付宝」「工资 12000」，自动解析金额、收支方向、分类、账户和日期。
 - **官方账单导入**：支持微信支付、支付宝导出的 CSV / Excel（.xlsx）；自动识别表头和编码，按交易单号去重，导入前可预览。
+- **存钱目标**：设置本月、全年存钱目标，存钱页显示结余、完成进度和差额；可以写一句自己的存钱口号（如「存够钱买手机」）。首页同步显示「已存多少、还差多少」。固定月收入可开启自动计入，也可以手动记。
 - **明细与统计**：按月查看、按收支筛选、搜索商家/备注/分类/账户，左滑删除；统计页有分类占比和近 6 个月趋势。
 - **本地优先**：SQLite 单文件账本，无账号、无云同步、无埋点；导入的原始文件只在内存解析，不保留副本。
 - **响应式界面**：手机底部导航，Windows 宽屏侧栏。
@@ -16,11 +17,11 @@
 
 ### Android
 
-下载 [简账-1.1.1.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.1/jianzhang-1.1.1.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
+下载 [简账-1.2.0.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.2.0/jianzhang-1.2.0.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
 
 ### Windows
 
-下载 [简账-1.1.1-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.1.1/jianzhang-1.1.1-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
+下载 [简账-1.2.0-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.2.0/jianzhang-1.2.0-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
 
 Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本。如果该目录不可写，会自动退到 exe 同级的 `jianzhang-data\jianzhang.sqlite`，设置页会显示实际路径。
 
@@ -33,6 +34,14 @@ Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本�
 不要直接把微信的加密 ZIP 拖进来；App 只接收解压后的 CSV、TXT 或 .xlsx。旧版二进制 `.xls` 不支持，请在 Excel/WPS 里另存为 `.xlsx` 或 CSV。
 
 ![Excel 账单导入预览](docs/images/android-xlsx.png)
+
+## 存钱与固定收入
+
+- 存钱页的「本月已存」就是首页的结余（本月收入减支出），没有另存一笔虚拟账。
+- 目标在存钱页设置，分本月和全年；达到目标是墨绿色，没达到或为负数是赤陶色。
+- 存钱页顶部可以写一句口号，比如「存够钱买手机」；不写也可以。
+- 设置 → 固定月收入：开启后每月 1 号自动生成一笔「工资」收入，金额可改；关闭后不再新增，已生成的不删除。
+- 如果习惯手动记收入，保持关闭即可，正常用一句话或详细记账输入。
 
 ## 数据
 

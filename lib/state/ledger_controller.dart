@@ -33,6 +33,8 @@ class ImportPlan {
 class LedgerController extends ChangeNotifier {
   LedgerController(this.store, {DateTime? now})
     : _selectedMonth = monthStart(now ?? DateTime.now()) {
+    _loadSettings();
+    _ensureAutoSalary(now ?? DateTime.now());
     refresh();
   }
 
@@ -50,10 +52,24 @@ class LedgerController extends ChangeNotifier {
     incomeCents: 0,
     count: 0,
   );
+  LedgerSummary _currentSummary = const LedgerSummary(
+    expenseCents: 0,
+    incomeCents: 0,
+    count: 0,
+  );
   List<CategoryTotal> _expenseCategoryTotals = const [];
   List<CategoryTotal> _incomeCategoryTotals = const [];
   List<MonthTotal> _trend = const [];
   int _totalCount = 0;
+  int _currentYearNetCents = 0;
+
+  bool _salaryEnabled = false;
+  int _salaryCents = 0;
+  String? _salaryStartMonth;
+  String? _salaryLastMonth;
+  int _monthGoalCents = 0;
+  int _yearGoalCents = 0;
+  String _savingsSlogan = '';
 
   DateTime get selectedMonth => _selectedMonth;
   EntryDirection? get filter => _filter;
@@ -62,6 +78,7 @@ class LedgerController extends ChangeNotifier {
   List<LedgerEntry> get allMonthEntries => _allMonthEntries;
   List<LedgerEntry> get recentEntries => _recentEntries;
   LedgerSummary get summary => _summary;
+  LedgerSummary get currentSummary => _currentSummary;
   List<CategoryTotal> get expenseCategoryTotals => _expenseCategoryTotals;
   List<CategoryTotal> get incomeCategoryTotals => _incomeCategoryTotals;
   List<CategoryTotal> categoryTotalsFor(EntryDirection direction) =>
@@ -70,6 +87,15 @@ class LedgerController extends ChangeNotifier {
       : _incomeCategoryTotals;
   List<MonthTotal> get trend => _trend;
   int get totalCount => _totalCount;
+
+  DateTime get currentMonth => monthStart(DateTime.now());
+  int get currentMonthNetCents => _currentSummary.netCents;
+  int get currentYearNetCents => _currentYearNetCents;
+  int get monthGoalCents => _monthGoalCents;
+  int get yearGoalCents => _yearGoalCents;
+  String get savingsSlogan => _savingsSlogan;
+  bool get salaryEnabled => _salaryEnabled;
+  int get salaryCents => _salaryCents;
 
   bool get isCurrentMonth => isSameMonth(_selectedMonth, DateTime.now());
 
@@ -84,6 +110,11 @@ class LedgerController extends ChangeNotifier {
           );
     _recentEntries = store.recent(limit: 5);
     _summary = store.summaryForMonth(_selectedMonth);
+    final now = DateTime.now();
+    _currentSummary = isSameMonth(_selectedMonth, now)
+        ? _summary
+        : store.summaryForMonth(now);
+    _currentYearNetCents = store.summaryForYear(now.year).netCents;
     _expenseCategoryTotals = store.categoryTotals(
       _selectedMonth,
       EntryDirection.expense,
@@ -96,6 +127,113 @@ class LedgerController extends ChangeNotifier {
     _totalCount = store.totalCount();
     notifyListeners();
   }
+
+  void setMonthGoal(int cents) {
+    _monthGoalCents = cents < 0 ? 0 : cents;
+    store.writeSetting('savings.monthGoalCents', '$_monthGoalCents');
+    notifyListeners();
+  }
+
+  void setYearGoal(int cents) {
+    _yearGoalCents = cents < 0 ? 0 : cents;
+    store.writeSetting('savings.yearGoalCents', '$_yearGoalCents');
+    notifyListeners();
+  }
+
+  void setSavingsSlogan(String value) {
+    final slogan = value.trim();
+    _savingsSlogan = slogan.length > 40 ? slogan.substring(0, 40) : slogan;
+    store.writeSetting('savings.slogan', _savingsSlogan);
+    notifyListeners();
+  }
+
+  void saveSalarySettings({required bool enabled, required int cents}) {
+    final now = DateTime.now();
+    final currentMonth = monthStart(now);
+    _salaryEnabled = enabled;
+    _salaryCents = cents < 0 ? 0 : cents;
+    store.writeSetting('salary.enabled', enabled ? '1' : '0');
+    store.writeSetting('salary.cents', '$_salaryCents');
+
+    if (enabled) {
+      if (_salaryStartMonth == null) {
+        _salaryStartMonth = _monthKey(currentMonth);
+        store.writeSetting('salary.startMonth', _salaryStartMonth!);
+      }
+      final key = 'auto-salary:${_monthKey(currentMonth)}';
+      final existing = store.entryByExternal('auto_salary', key);
+      if (existing != null && cents > 0) {
+        store.update(existing.copyWith(amountCents: cents, updatedAt: now));
+      }
+      _ensureAutoSalary(now);
+    } else {
+      // 关闭后不补记停用期间的月份；已生成的收入保留。
+      _salaryLastMonth = _monthKey(currentMonth);
+      store.writeSetting('salary.lastMonth', _salaryLastMonth!);
+    }
+    refresh();
+  }
+
+  void _loadSettings() {
+    _salaryEnabled = store.readSetting('salary.enabled') == '1';
+    _salaryCents = int.tryParse(store.readSetting('salary.cents') ?? '') ?? 0;
+    _salaryStartMonth = store.readSetting('salary.startMonth');
+    _salaryLastMonth = store.readSetting('salary.lastMonth');
+    _monthGoalCents =
+        int.tryParse(store.readSetting('savings.monthGoalCents') ?? '') ?? 0;
+    _yearGoalCents =
+        int.tryParse(store.readSetting('savings.yearGoalCents') ?? '') ?? 0;
+    _savingsSlogan = store.readSetting('savings.slogan') ?? '';
+  }
+
+  void _ensureAutoSalary(DateTime now) {
+    if (!_salaryEnabled || _salaryCents <= 0) return;
+    final current = monthStart(now);
+    final start = _parseMonthKey(_salaryStartMonth) ?? current;
+    var cursor = _salaryLastMonth == null
+        ? start
+        : addMonths(_parseMonthKey(_salaryLastMonth!) ?? start, 1);
+    if (cursor.isBefore(start)) cursor = start;
+    var generated = 0;
+    while (!cursor.isAfter(current) && generated < 36) {
+      final key = 'auto-salary:${_monthKey(cursor)}';
+      if (store.entryByExternal('auto_salary', key) == null) {
+        store.insert(
+          LedgerEntry(
+            occurredAt: DateTime(cursor.year, cursor.month, 1, 9),
+            direction: EntryDirection.income,
+            amountCents: _salaryCents,
+            category: '工资',
+            account: '银行卡',
+            merchant: '固定收入',
+            note: '每月自动计入',
+            source: 'auto_salary',
+            externalId: key,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+      _salaryLastMonth = _monthKey(cursor);
+      store.writeSetting('salary.lastMonth', _salaryLastMonth!);
+      cursor = addMonths(cursor, 1);
+      generated++;
+    }
+  }
+
+  static DateTime? _parseMonthKey(String? value) {
+    if (value == null) return null;
+    final parts = value.split('-');
+    if (parts.length != 2) return null;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    if (year == null || month == null || month < 1 || month > 12) return null;
+    return DateTime(year, month);
+  }
+
+  static String _monthKey(DateTime month) =>
+      '${month.year.toString().padLeft(4, '0')}-'
+      '${month.month.toString().padLeft(2, '0')}';
 
   void shiftMonth(int delta) {
     _selectedMonth = addMonths(_selectedMonth, delta);

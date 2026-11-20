@@ -66,6 +66,15 @@ class LedgerStore {
       ''');
       _db.execute('PRAGMA user_version = 1;');
     }
+    if (version < 2) {
+      _db.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        );
+      ''');
+      _db.execute('PRAGMA user_version = 2;');
+    }
   }
 
   int insert(LedgerEntry entry) {
@@ -209,6 +218,52 @@ class LedgerStore {
     final rows = _db.select('SELECT * FROM entries WHERE id = ?;', [id]);
     if (rows.isEmpty) return null;
     return _fromRow(rows.first);
+  }
+
+  LedgerEntry? entryByExternal(String source, String externalId) {
+    final rows = _db.select(
+      'SELECT * FROM entries WHERE source = ? AND external_id = ? LIMIT 1;',
+      [source, externalId],
+    );
+    if (rows.isEmpty) return null;
+    return _fromRow(rows.first);
+  }
+
+  String? readSetting(String key) {
+    final rows = _db.select('SELECT value FROM settings WHERE key = ?;', [key]);
+    if (rows.isEmpty) return null;
+    return rows.first['value'] as String;
+  }
+
+  void writeSetting(String key, String value) {
+    _db.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?);', [
+      key,
+      value,
+    ]);
+  }
+
+  LedgerSummary summaryForYear(int year) {
+    final start = DateTime(year);
+    final end = DateTime(year + 1);
+    final row = _db
+        .select(
+          '''
+      SELECT
+        COALESCE(SUM(CASE WHEN direction = 0 THEN amount_cents ELSE 0 END), 0)
+          AS expense,
+        COALESCE(SUM(CASE WHEN direction = 1 THEN amount_cents ELSE 0 END), 0)
+          AS income,
+        COUNT(*) AS count
+      FROM entries WHERE occurred_at >= ? AND occurred_at < ?;
+      ''',
+          [start.toIso8601String(), end.toIso8601String()],
+        )
+        .first;
+    return LedgerSummary(
+      expenseCents: row['expense'] as int,
+      incomeCents: row['income'] as int,
+      count: row['count'] as int,
+    );
   }
 
   LedgerSummary summaryForMonth(DateTime month) {
