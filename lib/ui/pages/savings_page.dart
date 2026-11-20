@@ -136,7 +136,7 @@ class SavingsPage extends StatelessWidget {
         ],
       ),
     );
-    text.dispose();
+    Future<void>.delayed(const Duration(milliseconds: 400), text.dispose);
     if (value == null) return;
     controller.setSavingsSlogan(value);
   }
@@ -189,7 +189,7 @@ class SavingsPage extends StatelessWidget {
         ],
       ),
     );
-    text.dispose();
+    Future<void>.delayed(const Duration(milliseconds: 400), text.dispose);
     if (value == null) return;
     if (isYear) {
       controller.setYearGoal(value);

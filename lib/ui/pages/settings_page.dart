@@ -168,7 +168,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
-    amount.dispose();
+    Future<void>.delayed(const Duration(milliseconds: 400), amount.dispose);
     if (saved != true || !mounted) return;
     controller.saveSalarySettings(enabled: enabled, cents: resultCents);
     ScaffoldMessenger.of(context)
