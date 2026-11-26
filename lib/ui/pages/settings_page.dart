@@ -186,22 +186,13 @@ class _SettingsPageState extends State<SettingsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '个人微信/支付宝没有公开的交易读取接口。第三方 App 拿不到你的流水；用无障碍服务模拟点击又容易漏单、违反平台规则。',
+                '微信/支付宝没有开放个人流水接口，第三方 App 拿不到实时账单。',
                 style: TextStyle(fontSize: 13, height: 1.65),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 10),
               Text(
-                '所以这里走官方路径：你在微信/支付宝里导出账单 CSV 或 Excel，App 负责解析、分类、去重。一次导出可以导入几个月，日常再用一句话补记。',
+                '所以用官方导出文件导入；数据只在本机，不上传。',
                 style: TextStyle(fontSize: 13, height: 1.65),
-              ),
-              SizedBox(height: 12),
-              Text(
-                '所有数据只存在本机 SQLite，不联网、不上传。',
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.6,
-                  color: AppColors.muted,
-                ),
               ),
             ],
           ),
@@ -224,7 +215,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const PageHeader(
           kicker: 'Settings',
           title: '设置',
-          subtitle: '账本、账单和数据都归你。',
+          subtitle: '账本和数据都在本机。',
         ),
         const SizedBox(height: 22),
         SectionCard(
@@ -283,24 +274,8 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               _SettingRow(
                 icon: Icons.storage_rounded,
-                title: '本地数据',
-                subtitle: '${controller.totalCount} 笔账目 · SQLite',
-              ),
-              const Divider(height: 1, indent: 66),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(66, 0, 18, 16),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: SelectableText(
-                    controller.store.databasePath,
-                    maxLines: 2,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      height: 1.45,
-                      color: AppColors.faint,
-                    ),
-                  ),
-                ),
+                title: '本地存储',
+                subtitle: '${controller.totalCount} 笔，只在这台设备',
               ),
               const Divider(height: 1, indent: 66),
               _SettingRow(
@@ -316,26 +291,10 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 16),
         SectionCard(
           padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              _SettingRow(
-                icon: Icons.info_outline_rounded,
-                title: '简账 1.2.0',
-                subtitle: '本地优先的中文记账本',
-              ),
-              const Divider(height: 1, indent: 66),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
-                child: Text(
-                  '没有账号、没有云同步、没有埋点。导入的原始文件只在内存里解析，不保留副本。',
-                  style: TextStyle(
-                    fontSize: 11,
-                    height: 1.65,
-                    color: AppColors.muted,
-                  ),
-                ),
-              ),
-            ],
+          child: _SettingRow(
+            icon: Icons.info_outline_rounded,
+            title: '简账 1.3.0',
+            subtitle: '本地优先，不上传、不联网',
           ),
         ),
         const SizedBox(height: 24),

@@ -270,9 +270,16 @@ class _SavingsHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasGoal = goalCents > 0;
     final met = hasGoal && amountCents >= goalCents;
-    final color = amountCents < 0 || (hasGoal && !met)
+    final color = amountCents > 0
+        ? AppColors.income
+        : amountCents < 0
         ? AppColors.expense
-        : AppColors.income;
+        : AppColors.muted;
+    final gapColor = met
+        ? AppColors.income
+        : amountCents < 0
+        ? AppColors.expense
+        : AppColors.muted;
     final gap = goalCents - amountCents;
     final progress = !hasGoal
         ? 0.0
@@ -349,7 +356,7 @@ class _SavingsHero extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: gapColor,
               ),
             ),
           ] else ...[

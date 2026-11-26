@@ -5,8 +5,7 @@ import 'pages/home_page.dart';
 import 'pages/savings_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/stats_page.dart';
-import 'pages/transactions_page.dart';
-import 'sheets/entry_sheet.dart';
+import 'sheets/quick_record_sheet.dart';
 import 'theme.dart';
 
 class AppShell extends StatefulWidget {
@@ -24,17 +23,15 @@ class _AppShellState extends State<AppShell> {
   List<Widget> _buildPages() => [
     HomePage(
       controller: widget.controller,
-      onOpenTransactions: () => setState(() => _index = 1),
-      onOpenSavings: () => setState(() => _index = 3),
+      onOpenSavings: () => setState(() => _index = 2),
     ),
-    TransactionsPage(controller: widget.controller),
     StatsPage(controller: widget.controller),
     SavingsPage(controller: widget.controller),
     SettingsPage(controller: widget.controller),
   ];
 
   void _openNewEntry() {
-    showEntryEditor(context, widget.controller);
+    showQuickRecordSheet(context, widget.controller);
   }
 
   @override
@@ -47,42 +44,65 @@ class _AppShellState extends State<AppShell> {
         if (!wide) {
           return Scaffold(
             body: body,
-            bottomNavigationBar: DecoratedBox(
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: AppColors.line)),
-              ),
-              child: NavigationBar(
-                selectedIndex: _index,
-                height: 66,
-                onDestinationSelected: (value) =>
-                    setState(() => _index = value),
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.edit_note_rounded),
-                    selectedIcon: Icon(Icons.edit_note_rounded),
-                    label: '记账',
+            floatingActionButton: FloatingActionButton(
+              onPressed: _openNewEntry,
+              backgroundColor: AppColors.ink,
+              foregroundColor: const Color(0xFFF7F2E7),
+              elevation: 0,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.add_rounded, size: 28),
+            ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerDocked,
+            bottomNavigationBar: BottomAppBar(
+              color: AppColors.paper,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              shape: const CircularNotchedRectangle(),
+              notchMargin: 6,
+              padding: EdgeInsets.zero,
+              child: SafeArea(
+                top: false,
+                child: SizedBox(
+                  height: 64,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _BottomTab(
+                          icon: Icons.edit_note_rounded,
+                          label: '记账',
+                          selected: _index == 0,
+                          onTap: () => setState(() => _index = 0),
+                        ),
+                      ),
+                      Expanded(
+                        child: _BottomTab(
+                          icon: Icons.insights_rounded,
+                          label: '统计',
+                          selected: _index == 1,
+                          onTap: () => setState(() => _index = 1),
+                        ),
+                      ),
+                      const SizedBox(width: 76),
+                      Expanded(
+                        child: _BottomTab(
+                          icon: Icons.savings_rounded,
+                          label: '存钱',
+                          selected: _index == 2,
+                          onTap: () => setState(() => _index = 2),
+                        ),
+                      ),
+                      Expanded(
+                        child: _BottomTab(
+                          icon: Icons.settings_rounded,
+                          label: '设置',
+                          selected: _index == 3,
+                          onTap: () => setState(() => _index = 3),
+                        ),
+                      ),
+                    ],
                   ),
-                  NavigationDestination(
-                    icon: Icon(Icons.receipt_long_outlined),
-                    selectedIcon: Icon(Icons.receipt_long_rounded),
-                    label: '明细',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.insights_outlined),
-                    selectedIcon: Icon(Icons.insights_rounded),
-                    label: '统计',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.savings_outlined),
-                    selectedIcon: Icon(Icons.savings_rounded),
-                    label: '存钱',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.settings_outlined),
-                    selectedIcon: Icon(Icons.settings_rounded),
-                    label: '设置',
-                  ),
-                ],
+                ),
               ),
             ),
           );
@@ -105,6 +125,43 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
+class _BottomTab extends StatelessWidget {
+  const _BottomTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.ink : AppColors.muted;
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 21, color: color),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Sidebar extends StatelessWidget {
   const _Sidebar({
     required this.index,
@@ -122,7 +179,6 @@ class _Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     const items = [
       (Icons.edit_note_rounded, '记账'),
-      (Icons.receipt_long_rounded, '明细'),
       (Icons.insights_rounded, '统计'),
       (Icons.savings_rounded, '存钱'),
       (Icons.settings_rounded, '设置'),

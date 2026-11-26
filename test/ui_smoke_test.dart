@@ -5,6 +5,7 @@ import 'package:jianzhang/data/ledger_entry.dart';
 import 'package:jianzhang/data/ledger_store.dart';
 import 'package:jianzhang/domain/categories.dart';
 import 'package:jianzhang/state/ledger_controller.dart';
+import 'package:jianzhang/ui/widgets/quick_entry.dart';
 
 LedgerController _controller({bool withData = true}) {
   final store = LedgerStore.inMemory();
@@ -55,16 +56,12 @@ void _expectNoLayoutError(WidgetTester tester) {
 }
 
 void main() {
-  testWidgets('桌面端五个页面都能切换且不溢出', (tester) async {
+  testWidgets('桌面端四个页面都能切换且不溢出', (tester) async {
     final controller = _controller();
     await _pumpApp(tester, controller, size: const Size(1280, 820));
 
-    expect(find.text('一句话记账'), findsOneWidget);
-    _expectNoLayoutError(tester);
-
-    await tester.tap(find.text('明细').first);
-    await tester.pumpAndSettle();
-    expect(find.text('TRANSACTIONS'), findsOneWidget);
+    expect(find.text('本月概览'), findsOneWidget);
+    expect(find.textContaining('最大头是居住'), findsOneWidget);
     _expectNoLayoutError(tester);
 
     await tester.tap(find.text('统计').first);
@@ -83,16 +80,12 @@ void main() {
     _expectNoLayoutError(tester);
   });
 
-  testWidgets('手机端五个页面都能切换且不溢出', (tester) async {
+  testWidgets('手机端四个页面和中间加号都在且不溢出', (tester) async {
     final controller = _controller();
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
-    expect(find.text('一句话记账'), findsOneWidget);
-    _expectNoLayoutError(tester);
-
-    await tester.tap(find.text('明细'));
-    await tester.pumpAndSettle();
-    expect(find.text('TRANSACTIONS'), findsOneWidget);
+    expect(find.text('本月概览'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
     _expectNoLayoutError(tester);
 
     await tester.tap(find.text('统计'));
@@ -129,11 +122,19 @@ void main() {
     _expectNoLayoutError(tester);
   });
 
-  testWidgets('一句话记账直接入账', (tester) async {
+  testWidgets('加号打开面板，一句话记账直接入账', (tester) async {
     final controller = _controller(withData: false);
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
-    await tester.enterText(find.byType(TextField).first, '午饭 25 微信');
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    expect(find.text('记一笔'), findsOneWidget);
+
+    final entryField = find.descendant(
+      of: find.byType(QuickEntry),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(entryField, '午饭 25 微信');
     await tester.pumpAndSettle();
     expect(find.textContaining('餐饮'), findsWidgets);
 
@@ -145,8 +146,6 @@ void main() {
     expect(entry.amountCents, 2500);
     expect(entry.category, '餐饮');
     expect(entry.account, '微信');
-    expect(find.text('1 笔'), findsOneWidget);
-    expect(find.text('¥25'), findsWidgets);
     expect(find.textContaining('已记下'), findsOneWidget);
     _expectNoLayoutError(tester);
 
@@ -155,19 +154,33 @@ void main() {
     expect(find.textContaining('已记下'), findsNothing);
   });
 
-  testWidgets('详细记账面板能打开和关闭', (tester) async {
+  testWidgets('加号面板可以进入详细记账并关闭', (tester) async {
     final controller = _controller(withData: false);
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('详细记一笔'));
     await tester.pumpAndSettle();
-    expect(find.text('记一笔'), findsOneWidget);
     expect(find.text('记下 支出'), findsOneWidget);
     _expectNoLayoutError(tester);
 
-    await tester.tap(find.byIcon(Icons.close_rounded).first);
+    await tester.tap(find.byIcon(Icons.close_rounded).last);
     await tester.pumpAndSettle();
-    expect(find.text('一句话记账'), findsOneWidget);
+    expect(find.text('记一笔'), findsOneWidget);
+    _expectNoLayoutError(tester);
+  });
+
+  testWidgets('统计页可以切到年度视图', (tester) async {
+    final controller = _controller();
+    await _pumpApp(tester, controller, size: const Size(430, 900));
+
+    await tester.tap(find.text('统计'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('年'));
+    await tester.pumpAndSettle();
+    expect(find.text('全年趋势'), findsOneWidget);
+    expect(find.textContaining('年支出'), findsWidgets);
     _expectNoLayoutError(tester);
   });
 }

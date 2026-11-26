@@ -266,6 +266,58 @@ class LedgerStore {
     );
   }
 
+  List<LedgerEntry> entriesForYear(int year) {
+    final start = DateTime(year);
+    final end = DateTime(year + 1);
+    final rows = _db.select(
+      'SELECT * FROM entries WHERE occurred_at >= ? AND occurred_at < ? '
+      'ORDER BY occurred_at ASC, id ASC;',
+      [start.toIso8601String(), end.toIso8601String()],
+    );
+    return rows.map(_fromRow).toList();
+  }
+
+  List<CategoryTotal> categoryTotalsForYear(
+    int year,
+    EntryDirection direction,
+  ) {
+    final start = DateTime(year);
+    final end = DateTime(year + 1);
+    final rows = _db.select(
+      '''
+      SELECT category, SUM(amount_cents) AS amount, COUNT(*) AS count
+      FROM entries
+      WHERE occurred_at >= ? AND occurred_at < ? AND direction = ?
+      GROUP BY category
+      ORDER BY amount DESC, category ASC;
+      ''',
+      [start.toIso8601String(), end.toIso8601String(), direction.storageValue],
+    );
+    return rows
+        .map(
+          (row) => CategoryTotal(
+            category: row['category'] as String,
+            amountCents: row['amount'] as int,
+            count: row['count'] as int,
+          ),
+        )
+        .toList();
+  }
+
+  List<MonthTotal> monthlyTotalsForYear(int year) {
+    return [
+      for (var month = 1; month <= 12; month++)
+        () {
+          final summary = summaryForMonth(DateTime(year, month));
+          return MonthTotal(
+            month: DateTime(year, month),
+            expenseCents: summary.expenseCents,
+            incomeCents: summary.incomeCents,
+          );
+        }(),
+    ];
+  }
+
   LedgerSummary summaryForMonth(DateTime month) {
     final start = monthStart(month);
     final end = addMonths(start, 1);

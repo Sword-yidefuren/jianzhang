@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/dates.dart';
 import '../../core/money.dart';
@@ -10,9 +11,14 @@ import '../theme.dart';
 import 'components.dart';
 
 class QuickEntry extends StatefulWidget {
-  const QuickEntry({super.key, required this.controller});
+  const QuickEntry({
+    super.key,
+    required this.controller,
+    this.autofocus = false,
+  });
 
   final LedgerController controller;
+  final bool autofocus;
 
   @override
   State<QuickEntry> createState() => _QuickEntryState();
@@ -21,7 +27,11 @@ class QuickEntry extends StatefulWidget {
 class _QuickEntryState extends State<QuickEntry> {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
+  final _speech = SpeechToText();
   ParsedEntry? _parsed;
+  bool _voiceAvailable = false;
+  bool _voiceStarting = false;
+  bool _voiceListening = false;
 
   @override
   void initState() {
@@ -36,6 +46,83 @@ class _QuickEntryState extends State<QuickEntry> {
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _startVoice() async {
+    if (_voiceStarting || _voiceListening) return;
+    setState(() => _voiceStarting = true);
+    try {
+      if (!_voiceAvailable) {
+        _voiceAvailable = await _speech.initialize(
+          onError: (error) {
+            if (mounted) _showVoiceError(_voiceErrorMessage(error.errorMsg));
+          },
+          onStatus: (status) {
+            if (!mounted) return;
+            if (status == 'done' || status == 'notListening') {
+              setState(() => _voiceListening = false);
+            }
+          },
+        );
+      }
+      if (!_voiceAvailable) {
+        _showVoiceError('这台设备没有可用的语音识别，继续打字吧');
+        return;
+      }
+      final started = await _speech.listen(
+        onResult: (result) {
+          if (!mounted) return;
+          final words = result.recognizedWords.trim();
+          if (words.isEmpty) return;
+          _textController.text = words;
+          _textController.selection = TextSelection.collapsed(
+            offset: words.length,
+          );
+          _onChanged(words);
+        },
+        listenOptions: SpeechListenOptions(
+          onDevice: true,
+          partialResults: true,
+          localeId: 'zh_CN',
+          listenMode: ListenMode.dictation,
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 2),
+        ),
+      );
+      if (mounted) setState(() => _voiceListening = started);
+      if (!started) {
+        _showVoiceError('没能启动语音识别，继续打字吧');
+      }
+    } catch (_) {
+      _showVoiceError('语音识别不可用，继续打字吧');
+    } finally {
+      if (mounted) setState(() => _voiceStarting = false);
+    }
+  }
+
+  Future<void> _stopVoice() async {
+    if (!_voiceListening) return;
+    try {
+      await _speech.stop();
+    } catch (_) {
+      // 停止失败不影响已识别的文字。
+    }
+    if (mounted) setState(() => _voiceListening = false);
+  }
+
+  String _voiceErrorMessage(String raw) {
+    if (raw.contains('permission')) return '需要麦克风权限；也可以继续打字';
+    if (raw.contains('network')) return '这台设备没有离线语音包，继续打字吧';
+    return '语音识别不可用，继续打字吧';
+  }
+
+  void _showVoiceError(String message) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+    );
   }
 
   void _onChanged(String value) {
@@ -140,6 +227,7 @@ class _QuickEntryState extends State<QuickEntry> {
                   child: TextField(
                     controller: _textController,
                     focusNode: _focusNode,
+                    autofocus: widget.autofocus,
                     textInputAction: TextInputAction.done,
                     style: const TextStyle(
                       fontSize: 16,
@@ -166,6 +254,40 @@ class _QuickEntryState extends State<QuickEntry> {
                   ),
                 ),
                 const SizedBox(width: 4),
+                Tooltip(
+                  message: '按住说话（仅本机）',
+                  child: GestureDetector(
+                    onLongPressStart: (_) => _startVoice(),
+                    onLongPressEnd: (_) => _stopVoice(),
+                    child: Container(
+                      width: 38,
+                      height: 42,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _voiceListening
+                            ? AppColors.expenseSoft
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: _voiceStarting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              _voiceListening
+                                  ? Icons.mic_rounded
+                                  : Icons.mic_none_rounded,
+                              size: 19,
+                              color: _voiceListening
+                                  ? AppColors.expense
+                                  : AppColors.muted,
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
                 SizedBox(
                   width: 42,
                   height: 42,
@@ -189,6 +311,29 @@ class _QuickEntryState extends State<QuickEntry> {
               ],
             ),
           ),
+          if (_voiceStarting || _voiceListening)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    _voiceListening
+                        ? Icons.graphic_eq_rounded
+                        : Icons.mic_none_rounded,
+                    size: 13,
+                    color: AppColors.expense,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    _voiceStarting ? '正在准备麦克风…' : '正在听…松开结束',
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      color: AppColors.expense,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           AnimatedSize(
             duration: const Duration(milliseconds: 180),
             alignment: Alignment.topCenter,

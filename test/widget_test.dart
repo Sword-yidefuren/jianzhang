@@ -5,7 +5,7 @@ import 'package:jianzhang/data/ledger_store.dart';
 import 'package:jianzhang/state/ledger_controller.dart';
 
 void main() {
-  testWidgets('首页能启动并展示一句话输入', (tester) async {
+  testWidgets('首页能启动并打开一句话输入', (tester) async {
     tester.view.physicalSize = const Size(430, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -18,8 +18,13 @@ void main() {
     await tester.pumpWidget(JianzhangApp(controller: controller));
     await tester.pumpAndSettle();
 
-    expect(find.text('一句话记账'), findsOneWidget);
+    expect(find.text('本月概览'), findsOneWidget);
     expect(find.text('本月支出'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    expect(find.text('一句话记账'), findsOneWidget);
     expect(find.textContaining('例如：午饭'), findsOneWidget);
   });
 }
