@@ -44,13 +44,16 @@ class _AppShellState extends State<AppShell> {
         if (!wide) {
           return Scaffold(
             body: body,
-            floatingActionButton: FloatingActionButton(
-              onPressed: _openNewEntry,
-              backgroundColor: AppColors.ink,
-              foregroundColor: const Color(0xFFF7F2E7),
-              elevation: 0,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.add_rounded, size: 28),
+            floatingActionButton: Transform.translate(
+              offset: const Offset(0, 10),
+              child: FloatingActionButton(
+                onPressed: _openNewEntry,
+                backgroundColor: AppColors.ink,
+                foregroundColor: const Color(0xFFF7F2E7),
+                elevation: 0,
+                shape: const CircleBorder(),
+                child: const Icon(Icons.add_rounded, size: 28),
+              ),
             ),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,

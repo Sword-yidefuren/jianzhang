@@ -70,6 +70,7 @@ class LedgerController extends ChangeNotifier {
   int _monthGoalCents = 0;
   int _yearGoalCents = 0;
   String _savingsSlogan = '';
+  String _lastEntryMode = 'quick';
 
   DateTime get selectedMonth => _selectedMonth;
   EntryDirection? get filter => _filter;
@@ -94,6 +95,7 @@ class LedgerController extends ChangeNotifier {
   int get monthGoalCents => _monthGoalCents;
   int get yearGoalCents => _yearGoalCents;
   String get savingsSlogan => _savingsSlogan;
+  String get lastEntryMode => _lastEntryMode;
   bool get salaryEnabled => _salaryEnabled;
   int get salaryCents => _salaryCents;
 
@@ -147,6 +149,12 @@ class LedgerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setLastEntryMode(String mode) {
+    if (mode != 'quick' && mode != 'detailed') return;
+    _lastEntryMode = mode;
+    store.writeSetting('entry.lastMode', mode);
+  }
+
   void saveSalarySettings({required bool enabled, required int cents}) {
     final now = DateTime.now();
     final currentMonth = monthStart(now);
@@ -184,6 +192,7 @@ class LedgerController extends ChangeNotifier {
     _yearGoalCents =
         int.tryParse(store.readSetting('savings.yearGoalCents') ?? '') ?? 0;
     _savingsSlogan = store.readSetting('savings.slogan') ?? '';
+    _lastEntryMode = store.readSetting('entry.lastMode') ?? 'quick';
   }
 
   void _ensureAutoSalary(DateTime now) {

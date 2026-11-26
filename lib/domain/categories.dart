@@ -24,6 +24,18 @@ class Category {
   final IconData icon;
   final Color color;
   final List<String> keywords;
+
+  /// 黑白主题下用几档灰区分分类，不保留原来的彩色。
+  Color get monoColor {
+    const tones = [
+      Color(0xFF1B1B19),
+      Color(0xFF4A4742),
+      Color(0xFF6F6C66),
+      Color(0xFF8C887E),
+    ];
+    final code = name.codeUnits.fold<int>(0, (sum, unit) => sum + unit);
+    return tones[code % tones.length];
+  }
 }
 
 const _incomeColor = Color(0xFF3E7864);
@@ -234,6 +246,35 @@ const expenseCategories = <Category>[
     icon: Icons.flight_takeoff_rounded,
     color: Color(0xFF4F7E9E),
     keywords: ['酒店', '民宿', '机票', '景区', '旅游', '度假', '签证', '旅行', '住宿', '景点'],
+  ),
+  Category(
+    name: 'AI使用',
+    direction: EntryDirection.expense,
+    icon: Icons.smart_toy_rounded,
+    color: Color(0xFF6F6C66),
+    keywords: [
+      'AI使用',
+      'ChatGPT',
+      'GPT',
+      'OpenAI',
+      'Claude',
+      'DeepSeek',
+      'Gemini',
+      'Copilot',
+      'Midjourney',
+      'Stable Diffusion',
+      'stablediffusion',
+      'Sora',
+      '大模型',
+      '人工智能',
+      'AI绘画',
+      'AI会员',
+      'AI订阅',
+      'API充值',
+      'API费用',
+      'Token充值',
+      '算力',
+    ],
   ),
   Category(
     name: '其他',

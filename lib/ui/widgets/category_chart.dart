@@ -91,7 +91,7 @@ class _DonutPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
         ..strokeCap = StrokeCap.butt
-        ..color = category.color;
+        ..color = category.monoColor;
       final effectiveSweep = math.max(sweep - gap, 0.006);
       canvas.drawArc(rect, start + gap / 2, effectiveSweep, false, paint);
       start += sweep;
@@ -238,7 +238,7 @@ class _CategoryRow extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: category.color,
+              color: category.monoColor,
               borderRadius: BorderRadius.circular(3),
             ),
           ),
@@ -276,7 +276,7 @@ class _CategoryRow extends StatelessWidget {
                     value: percent,
                     minHeight: 3,
                     backgroundColor: AppColors.paperDeep,
-                    valueColor: AlwaysStoppedAnimation(category.color),
+                    valueColor: AlwaysStoppedAnimation(category.monoColor),
                   ),
                 ),
               ],

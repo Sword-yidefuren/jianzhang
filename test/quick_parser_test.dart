@@ -61,6 +61,12 @@ void main() {
       expect(entry.amountCents, 1200000);
     });
 
+    test('AI 订阅归入 AI使用', () {
+      expect(parse('ChatGPT 20').category, 'AI使用');
+      expect(parse('Claude 订阅 140').category, 'AI使用');
+      expect(parse('AI使用 30').category, 'AI使用');
+    });
+
     test('收到退款 99', () {
       final entry = parse('收到退款 99');
       expect(entry.direction, EntryDirection.income);

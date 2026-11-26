@@ -2,26 +2,28 @@
 
 本地优先的中文记账本。打开就能记，月底自然清楚。
 
-![Android 首页](docs/images/android-home.png)
+![黑白主题预览](docs/images/theme-monochrome-preview.png)
 
 ## 功能
 
-- **一句话记账**：点底部中间的加号，直接输入「午饭 25 微信」「昨天打车 18.5 支付宝」「工资 12000」，自动解析金额、收支方向、分类、账户和日期；也可以按住麦克风说话（仅本机识别）。
+- **一句话记账**：点底部中间的加号，直接输入「午饭 25 微信」「昨天打车 18.5 支付宝」「工资 12000」，自动解析金额、收支方向、分类、账户和日期；也可以按住麦克风说话（默认仅本机，失败时可选择系统识别）。
 - **官方账单导入**：支持微信支付、支付宝导出的 CSV / Excel（.xlsx）；自动识别表头和编码，按交易单号去重，导入前可预览。
+- **AI 使用分类**：ChatGPT、Claude、DeepSeek、Gemini、API 充值等会自动归入「AI使用」。
 - **存钱目标**：设置本月、全年存钱目标，存钱页显示结余、完成进度和差额；可以写一句自己的存钱口号（如「存够钱买手机」）。首页同步显示「已存多少、还差多少」。固定月收入可开启自动计入，也可以手动记。
 - **首页即账本**：本月概览、筛选、搜索和账目列表都在首页，不再单独设明细页；统计页支持按月、按年查看。
 - **本地优先**：SQLite 单文件账本，无账号、无云同步、无埋点；导入的原始文件只在内存解析，不保留副本。
+- **黑白主题**：暖白纸感配墨黑，不靠红绿区分收支，用符号、字重和灰阶表达层级。
 - **响应式界面**：手机四个入口加中间加号，Windows 宽屏侧栏。
 
 ## 运行
 
 ### Android
 
-下载 [简账-1.3.0.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.0/jianzhang-1.3.0.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
+下载 [简账-1.3.1.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.1/jianzhang-1.3.1.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
 
 ### Windows
 
-下载 [简账-1.3.0-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.0/jianzhang-1.3.0-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
+下载 [简账-1.3.1-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.1/jianzhang-1.3.1-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
 
 Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本。如果该目录不可写，会自动退到 exe 同级的 `jianzhang-data\jianzhang.sqlite`。
 
@@ -45,9 +47,9 @@ Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本�
 
 ## 语音记账
 
-- 加号面板里的麦克风，按住说话、松开结束，识别结果会填进输入框，仍可修改后保存。
-- 只使用本机语音识别，不申请联网权限；手机没有中文离线语音包时会提示改用打字。
-- 说话内容不会进入账本，只有最终文字会参与解析。
+- 加号面板里的麦克风，按住说话、松开结束；面板顶部可以在「简单记」和「详细记」之间切换，并记住上次选择。
+- 默认只使用本机语音识别；手机没有中文离线语音包时会提示改用系统识别（会联网），也可以继续打字。
+- 只有语音功能可能联网，其他记账、导入、统计、存钱功能都可以离线使用；说话内容不会进入账本，只有最终文字会参与解析。
 
 ## 数据
 

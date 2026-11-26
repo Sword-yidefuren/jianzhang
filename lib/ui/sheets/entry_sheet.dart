@@ -60,11 +60,15 @@ class EntryForm extends StatefulWidget {
     required this.controller,
     this.entry,
     this.initialText,
+    this.embedded = false,
+    this.onSaved,
   });
 
   final LedgerController controller;
   final LedgerEntry? entry;
   final String? initialText;
+  final bool embedded;
+  final VoidCallback? onSaved;
 
   @override
   State<EntryForm> createState() => _EntryFormState();
@@ -191,7 +195,11 @@ class _EntryFormState extends State<EntryForm> {
         note: _noteController.text,
       );
     }
-    Navigator.of(context).pop();
+    if (widget.onSaved != null) {
+      widget.onSaved!();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _delete() async {
@@ -204,7 +212,11 @@ class _EntryFormState extends State<EntryForm> {
     );
     if (!confirmed || !mounted) return;
     widget.controller.deleteEntry(widget.entry!.id!);
-    Navigator.of(context).pop();
+    if (widget.onSaved != null) {
+      widget.onSaved!();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -216,52 +228,57 @@ class _EntryFormState extends State<EntryForm> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-        border: Border.all(color: AppColors.line),
+        borderRadius: widget.embedded
+            ? BorderRadius.zero
+            : const BorderRadius.vertical(top: Radius.circular(26)),
+        border: widget.embedded ? null : Border.all(color: AppColors.line),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: widget.embedded ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          const SizedBox(height: 10),
-          Container(
-            width: 38,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.lineStrong,
-              borderRadius: BorderRadius.circular(2),
+          if (!widget.embedded) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.lineStrong,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 18, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _editing ? '编辑账目' : '记一笔',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        _editing ? '改完直接保存' : '金额、分类、日期都可以改',
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          color: AppColors.muted,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 18, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _editing ? '编辑账目' : '记一笔',
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 3),
+                        Text(
+                          _editing ? '改完直接保存' : '金额、分类、日期都可以改',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded, size: 20),
-                ),
-              ],
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ] else
+            const SizedBox(height: 8),
           Flexible(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
@@ -626,7 +643,7 @@ class _CategoryGrid extends StatelessWidget {
                           size: 18,
                           color: selected == category.name
                               ? accent
-                              : category.color,
+                              : category.monoColor,
                         ),
                         const SizedBox(height: 5),
                         Text(

@@ -15,10 +15,14 @@ class QuickEntry extends StatefulWidget {
     super.key,
     required this.controller,
     this.autofocus = false,
+    this.showDetailedAction = true,
+    this.onSaved,
   });
 
   final LedgerController controller;
   final bool autofocus;
+  final bool showDetailedAction;
+  final VoidCallback? onSaved;
 
   @override
   State<QuickEntry> createState() => _QuickEntryState();
@@ -48,7 +52,7 @@ class _QuickEntryState extends State<QuickEntry> {
     super.dispose();
   }
 
-  Future<void> _startVoice() async {
+  Future<void> _startVoice({bool allowNetwork = false}) async {
     if (_voiceStarting || _voiceListening) return;
     setState(() => _voiceStarting = true);
     try {
@@ -81,7 +85,7 @@ class _QuickEntryState extends State<QuickEntry> {
           _onChanged(words);
         },
         listenOptions: SpeechListenOptions(
-          onDevice: true,
+          onDevice: !allowNetwork,
           partialResults: true,
           localeId: 'zh_CN',
           listenMode: ListenMode.dictation,
@@ -91,13 +95,33 @@ class _QuickEntryState extends State<QuickEntry> {
       );
       if (mounted) setState(() => _voiceListening = started);
       if (!started) {
-        _showVoiceError('没能启动语音识别，继续打字吧');
+        if (allowNetwork) {
+          _showVoiceError('语音识别没能启动，继续打字吧');
+        } else {
+          _offerNetworkVoice();
+        }
       }
     } catch (_) {
       _showVoiceError('语音识别不可用，继续打字吧');
     } finally {
       if (mounted) setState(() => _voiceStarting = false);
     }
+  }
+
+  void _offerNetworkVoice() {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: const Text('本机没有离线中文语音，可以用系统识别（会联网）'),
+        duration: const Duration(seconds: 6),
+        action: SnackBarAction(
+          label: '用系统识别',
+          onPressed: () => _startVoice(allowNetwork: true),
+        ),
+      ),
+    );
   }
 
   Future<void> _stopVoice() async {
@@ -161,6 +185,7 @@ class _QuickEntryState extends State<QuickEntry> {
         ),
       ),
     );
+    widget.onSaved?.call();
   }
 
   void _useExample(String text) {
@@ -333,6 +358,14 @@ class _QuickEntryState extends State<QuickEntry> {
                   ),
                 ],
               ),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                '长按麦克风说话，仅本机识别',
+                style: TextStyle(fontSize: 10.5, color: AppColors.faint),
+              ),
             ),
           AnimatedSize(
             duration: const Duration(milliseconds: 180),
@@ -356,20 +389,21 @@ class _QuickEntryState extends State<QuickEntry> {
                   style: TextStyle(fontSize: 10.5, color: AppColors.faint),
                 ),
               ),
-              TextButton.icon(
-                onPressed: () => showEntryEditor(context, widget.controller),
-                icon: const Icon(Icons.tune_rounded, size: 14),
-                label: const Text('详细记一笔'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.muted,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  minimumSize: const Size(0, 30),
-                  textStyle: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+              if (widget.showDetailedAction)
+                TextButton.icon(
+                  onPressed: () => showEntryEditor(context, widget.controller),
+                  icon: const Icon(Icons.tune_rounded, size: 14),
+                  label: const Text('详细记一笔'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.muted,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    minimumSize: const Size(0, 30),
+                    textStyle: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],

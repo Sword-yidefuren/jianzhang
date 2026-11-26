@@ -293,7 +293,7 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: EdgeInsets.zero,
           child: _SettingRow(
             icon: Icons.info_outline_rounded,
-            title: '简账 1.3.0',
+            title: '简账 1.3.1',
             subtitle: '本地优先，不上传、不联网',
           ),
         ),

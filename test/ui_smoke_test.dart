@@ -129,6 +129,8 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
     expect(find.text('记一笔'), findsOneWidget);
+    expect(find.text('简单记'), findsOneWidget);
+    expect(find.text('详细记'), findsOneWidget);
 
     final entryField = find.descendant(
       of: find.byType(QuickEntry),
@@ -154,20 +156,26 @@ void main() {
     expect(find.textContaining('已记下'), findsNothing);
   });
 
-  testWidgets('加号面板可以进入详细记账并关闭', (tester) async {
+  testWidgets('详细面板可以切换，并记住上次模式', (tester) async {
     final controller = _controller(withData: false);
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('详细记一笔'));
+    await tester.tap(find.text('详细记'));
     await tester.pumpAndSettle();
     expect(find.text('记下 支出'), findsOneWidget);
+    expect(controller.lastEntryMode, 'detailed');
     _expectNoLayoutError(tester);
 
-    await tester.tap(find.byIcon(Icons.close_rounded).last);
+    await tester.tap(find.byTooltip('关闭'));
     await tester.pumpAndSettle();
-    expect(find.text('记一笔'), findsOneWidget);
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    expect(find.text('记下 支出'), findsOneWidget);
+    expect(find.text('详细记'), findsOneWidget);
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
     _expectNoLayoutError(tester);
   });
 
