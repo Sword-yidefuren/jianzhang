@@ -126,7 +126,7 @@ class _HomePageState extends State<HomePage> {
                 onChanged: _onSearchChanged,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: '搜商家、备注、分类或账户',
+                  hintText: '搜商家、备注、分类、账户或日期',
                   prefixIcon: const Icon(
                     Icons.search_rounded,
                     size: 19,
@@ -320,8 +320,8 @@ class _SummaryCard extends StatelessWidget {
                   label: '结余',
                   value: Money.format(summary.netCents),
                   color: summary.netCents >= 0
-                      ? const Color(0xFFF7F2E7)
-                      : const Color(0xFFAAA69B),
+                      ? const Color(0xFFD7E4DB)
+                      : const Color(0xFFF0C9B9),
                 ),
               ),
               Expanded(
@@ -385,9 +385,9 @@ class _SavingsLine extends StatelessWidget {
     }
     final met = net >= goal;
     final color = net > 0
-        ? const Color(0xFFF7F2E7)
+        ? const Color(0xFFD7E4DB)
         : net < 0
-        ? const Color(0xFFAAA69B)
+        ? const Color(0xFFF0C9B9)
         : const Color(0xFFAAA69B);
     final gap = goal - net;
     final saved = net < 0

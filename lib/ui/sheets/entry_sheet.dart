@@ -643,7 +643,7 @@ class _CategoryGrid extends StatelessWidget {
                           size: 18,
                           color: selected == category.name
                               ? accent
-                              : category.monoColor,
+                              : category.color,
                         ),
                         const SizedBox(height: 5),
                         Text(

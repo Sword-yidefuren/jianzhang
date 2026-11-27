@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 class AppColors {
   const AppColors._();
 
-  static const paper = Color(0xFFF6F4EF);
-  static const paperDeep = Color(0xFFECE9E1);
-  static const card = Color(0xFFFFFDF9);
-  static const ink = Color(0xFF1B1B19);
-  static const muted = Color(0xFF6F6C66);
-  static const faint = Color(0xFFA5A199);
-  static const line = Color(0xFFE4E1D9);
-  static const lineStrong = Color(0xFFD2CEC3);
-  static const expense = Color(0xFF5F5B54);
-  static const expenseSoft = Color(0xFFECE9E1);
-  static const income = Color(0xFF1B1B19);
-  static const incomeSoft = Color(0xFFECE9E1);
-  static const accent = Color(0xFF1B1B19);
-  static const accentSoft = Color(0xFFECE9E1);
-  static const gold = Color(0xFF6F6C66);
+  static const paper = Color(0xFFF4F1EA);
+  static const paperDeep = Color(0xFFECE7DD);
+  static const card = Color(0xFFFFFCF6);
+  static const ink = Color(0xFF232320);
+  static const muted = Color(0xFF7E7A70);
+  static const faint = Color(0xFFA9A499);
+  static const line = Color(0xFFE3DDD1);
+  static const lineStrong = Color(0xFFD3CCBE);
+  static const expense = Color(0xFFC05135);
+  static const expenseSoft = Color(0xFFF2E0DA);
+  static const income = Color(0xFF3E7864);
+  static const incomeSoft = Color(0xFFDDEAE4);
+  static const accent = Color(0xFF25473F);
+  static const accentSoft = Color(0xFFE2E9E4);
+  static const gold = Color(0xFFB08B52);
 }
 
 class AppTheme {
@@ -129,7 +129,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFF3F0E8),
+        fillColor: const Color(0xFFF8F5EE),
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -201,7 +201,7 @@ class AppTheme {
         contentTextStyle: const TextStyle(color: Colors.white, fontSize: 13),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        actionTextColor: const Color(0xFFF7F2E7),
+        actionTextColor: const Color(0xFFF0C9A8),
         insetPadding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       ),
       dialogTheme: DialogThemeData(

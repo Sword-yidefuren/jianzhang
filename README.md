@@ -2,7 +2,7 @@
 
 本地优先的中文记账本。打开就能记，月底自然清楚。
 
-![黑白主题预览](docs/images/theme-monochrome-preview.png)
+![Windows 首页](docs/images/windows-home.png)
 
 ## 功能
 
@@ -10,20 +10,19 @@
 - **官方账单导入**：支持微信支付、支付宝导出的 CSV / Excel（.xlsx）；自动识别表头和编码，按交易单号去重，导入前可预览。
 - **AI 使用分类**：ChatGPT、Claude、DeepSeek、Gemini、API 充值等会自动归入「AI使用」。
 - **存钱目标**：设置本月、全年存钱目标，存钱页显示结余、完成进度和差额；可以写一句自己的存钱口号（如「存够钱买手机」）。首页同步显示「已存多少、还差多少」。固定月收入可开启自动计入，也可以手动记。
-- **首页即账本**：本月概览、筛选、搜索和账目列表都在首页，不再单独设明细页；统计页支持按月、按年查看。
+- **首页即账本**：本月概览、筛选、搜索和账目列表都在首页，不再单独设明细页；搜索支持商家、备注、分类、账户和日期（如 `11月3日`、`昨天`），统计页支持按月、按年查看。
 - **本地优先**：SQLite 单文件账本，无账号、无云同步、无埋点；导入的原始文件只在内存解析，不保留副本。
-- **黑白主题**：暖白纸感配墨黑，不靠红绿区分收支，用符号、字重和灰阶表达层级。
 - **响应式界面**：手机四个入口加中间加号，Windows 宽屏侧栏。
 
 ## 运行
 
 ### Android
 
-下载 [简账-1.3.1.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.1/jianzhang-1.3.1.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
+下载 [简账-1.3.2.apk](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.2/jianzhang-1.3.2.apk)。当前是 debug 签名，适合自用和测试，不上架应用商店。
 
 ### Windows
 
-下载 [简账-1.3.1-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.1/jianzhang-1.3.1-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
+下载 [简账-1.3.2-windows.zip](https://github.com/Sword-yidefuren/jianzhang/releases/download/v1.3.2/jianzhang-1.3.2-windows.zip)，解压后运行 `jianzhang.exe`。整个目录一起使用，不要只拿 exe。
 
 Windows 首次启动会在 `%APPDATA%\Sword\简账\jianzhang.sqlite` 建账本。如果该目录不可写，会自动退到 exe 同级的 `jianzhang-data\jianzhang.sqlite`。
 

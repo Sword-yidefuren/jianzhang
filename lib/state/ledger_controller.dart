@@ -103,13 +103,28 @@ class LedgerController extends ChangeNotifier {
 
   void refresh() {
     _allMonthEntries = store.entriesForMonth(_selectedMonth);
-    _monthEntries = (_filter == null && _search.trim().isEmpty)
-        ? _allMonthEntries
-        : store.entriesForMonth(
-            _selectedMonth,
-            direction: _filter,
-            query: _search,
-          );
+    final parsed = parseSearchQuery(_search);
+    var visible = _allMonthEntries;
+    if (parsed.date != null) {
+      final day = dateOnly(parsed.date!);
+      visible = visible
+          .where((entry) => isSameDay(entry.occurredAt, day))
+          .toList();
+    }
+    final keyword = parsed.text.toLowerCase();
+    if (keyword.isNotEmpty) {
+      visible = visible.where((entry) {
+        return entry.merchant.toLowerCase().contains(keyword) ||
+            entry.note.toLowerCase().contains(keyword) ||
+            entry.category.toLowerCase().contains(keyword) ||
+            entry.account.toLowerCase().contains(keyword) ||
+            entry.sourceLabel.toLowerCase().contains(keyword);
+      }).toList();
+    }
+    if (_filter != null) {
+      visible = visible.where((entry) => entry.direction == _filter).toList();
+    }
+    _monthEntries = visible;
     _recentEntries = store.recent(limit: 5);
     _summary = store.summaryForMonth(_selectedMonth);
     final now = DateTime.now();

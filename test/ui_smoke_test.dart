@@ -85,7 +85,7 @@ void main() {
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
     expect(find.text('本月概览'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byKey(const Key('add-entry')), findsOneWidget);
     _expectNoLayoutError(tester);
 
     await tester.tap(find.text('统计'));
@@ -126,7 +126,7 @@ void main() {
     final controller = _controller(withData: false);
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.byKey(const Key('add-entry')));
     await tester.pumpAndSettle();
     expect(find.text('记一笔'), findsOneWidget);
     expect(find.text('简单记'), findsOneWidget);
@@ -160,7 +160,7 @@ void main() {
     final controller = _controller(withData: false);
     await _pumpApp(tester, controller, size: const Size(430, 900));
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.byKey(const Key('add-entry')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('详细记'));
     await tester.pumpAndSettle();
@@ -170,7 +170,7 @@ void main() {
 
     await tester.tap(find.byTooltip('关闭'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.byKey(const Key('add-entry')));
     await tester.pumpAndSettle();
     expect(find.text('记下 支出'), findsOneWidget);
     expect(find.text('详细记'), findsOneWidget);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/dates.dart';
@@ -54,6 +55,7 @@ class _QuickEntryState extends State<QuickEntry> {
 
   Future<void> _startVoice({bool allowNetwork = false}) async {
     if (_voiceStarting || _voiceListening) return;
+    HapticFeedback.mediumImpact();
     setState(() => _voiceStarting = true);
     try {
       if (!_voiceAvailable) {
@@ -126,6 +128,7 @@ class _QuickEntryState extends State<QuickEntry> {
 
   Future<void> _stopVoice() async {
     if (!_voiceListening) return;
+    HapticFeedback.selectionClick();
     try {
       await _speech.stop();
     } catch (_) {
@@ -235,126 +238,156 @@ class _QuickEntryState extends State<QuickEntry> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F5EE),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: _focusNode.hasFocus
-                    ? AppColors.accent.withValues(alpha: 0.6)
-                    : AppColors.line,
+          GestureDetector(
+            onLongPress: _textController.text.trim().isEmpty && !_voiceListening
+                ? () => _startVoice()
+                : null,
+            onLongPressEnd: _voiceListening ? (_) => _stopVoice() : null,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F5EE),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _focusNode.hasFocus
+                      ? AppColors.accent.withValues(alpha: 0.6)
+                      : AppColors.line,
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    focusNode: _focusNode,
-                    autofocus: widget.autofocus,
-                    textInputAction: TextInputAction.done,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.ink,
-                    ),
-                    decoration: const InputDecoration(
-                      hintText: '例如：午饭 25 微信',
-                      hintStyle: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.faint,
-                        fontWeight: FontWeight.w400,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      focusNode: _focusNode,
+                      autofocus: widget.autofocus,
+                      textInputAction: TextInputAction.done,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.ink,
                       ),
-                      filled: false,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                      isDense: true,
-                    ),
-                    onChanged: _onChanged,
-                    onSubmitted: (_) => _submit(),
-                    onTap: () => setState(() {}),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Tooltip(
-                  message: '按住说话（仅本机）',
-                  child: GestureDetector(
-                    onLongPressStart: (_) => _startVoice(),
-                    onLongPressEnd: (_) => _stopVoice(),
-                    child: Container(
-                      width: 38,
-                      height: 42,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _voiceListening
-                            ? AppColors.expenseSoft
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
+                      decoration: const InputDecoration(
+                        hintText: '例如：午饭 25 微信',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.faint,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        isDense: true,
                       ),
-                      child: _voiceStarting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Icon(
-                              _voiceListening
-                                  ? Icons.mic_rounded
-                                  : Icons.mic_none_rounded,
-                              size: 19,
-                              color: _voiceListening
-                                  ? AppColors.expense
-                                  : AppColors.muted,
-                            ),
+                      onChanged: _onChanged,
+                      onSubmitted: (_) => _submit(),
+                      onTap: () => setState(() {}),
                     ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                SizedBox(
-                  width: 42,
-                  height: 42,
-                  child: IconButton.filled(
-                    onPressed: _submit,
-                    style: IconButton.styleFrom(
-                      backgroundColor: _textController.text.trim().isEmpty
-                          ? AppColors.paperDeep
-                          : AppColors.ink,
-                      foregroundColor: _textController.text.trim().isEmpty
-                          ? AppColors.faint
-                          : Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(11),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: '按住说话（仅本机）',
+                    child: GestureDetector(
+                      onLongPressStart: (_) => _startVoice(),
+                      onLongPressEnd: (_) => _stopVoice(),
+                      child: Container(
+                        width: 38,
+                        height: 42,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _voiceListening
+                              ? AppColors.expenseSoft
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: _voiceStarting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                _voiceListening
+                                    ? Icons.mic_rounded
+                                    : Icons.mic_none_rounded,
+                                size: 19,
+                                color: _voiceListening
+                                    ? AppColors.expense
+                                    : AppColors.muted,
+                              ),
                       ),
                     ),
-                    icon: const Icon(Icons.arrow_upward_rounded, size: 19),
-                    tooltip: '记下',
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: IconButton.filled(
+                      onPressed: _submit,
+                      style: IconButton.styleFrom(
+                        backgroundColor: _textController.text.trim().isEmpty
+                            ? AppColors.paperDeep
+                            : AppColors.ink,
+                        foregroundColor: _textController.text.trim().isEmpty
+                            ? AppColors.faint
+                            : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                      ),
+                      icon: const Icon(Icons.arrow_upward_rounded, size: 19),
+                      tooltip: '记下',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           if (_voiceStarting || _voiceListening)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+              decoration: BoxDecoration(
+                color: AppColors.expenseSoft,
+                borderRadius: BorderRadius.circular(11),
+                border: Border.all(
+                  color: AppColors.expense.withValues(alpha: 0.25),
+                ),
+              ),
               child: Row(
                 children: [
-                  Icon(
-                    _voiceListening
-                        ? Icons.graphic_eq_rounded
-                        : Icons.mic_none_rounded,
-                    size: 13,
-                    color: AppColors.expense,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    _voiceStarting ? '正在准备麦克风…' : '正在听…松开结束',
-                    style: const TextStyle(
-                      fontSize: 10.5,
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: AppColors.expense.withValues(alpha: 0.14),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.mic_rounded,
+                      size: 15,
                       color: AppColors.expense,
                     ),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      _voiceStarting ? '正在准备麦克风…' : '正在听…松开结束',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.expense,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    '仅本机',
+                    style: TextStyle(fontSize: 9.5, color: AppColors.expense),
                   ),
                 ],
               ),
@@ -363,7 +396,7 @@ class _QuickEntryState extends State<QuickEntry> {
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(
-                '长按麦克风说话，仅本机识别',
+                '长按麦克风或输入框说话，仅本机识别',
                 style: TextStyle(fontSize: 10.5, color: AppColors.faint),
               ),
             ),

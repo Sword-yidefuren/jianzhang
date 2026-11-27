@@ -20,9 +20,9 @@ void main() {
 
     expect(find.text('本月概览'), findsOneWidget);
     expect(find.text('本月支出'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byKey(const Key('add-entry')), findsOneWidget);
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.byKey(const Key('add-entry')));
     await tester.pumpAndSettle();
     expect(find.text('一句话记账'), findsOneWidget);
     expect(find.textContaining('例如：午饭'), findsOneWidget);

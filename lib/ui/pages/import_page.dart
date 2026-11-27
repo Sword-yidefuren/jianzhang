@@ -454,8 +454,12 @@ class _FileResultCard extends StatelessWidget {
             children: [
               SoftTag(
                 label: result.source.label,
-                color: AppColors.ink,
-                background: AppColors.paperDeep,
+                color: result.source == BillSource.wechat
+                    ? AppColors.income
+                    : const Color(0xFF3B6F9E),
+                background: result.source == BillSource.wechat
+                    ? AppColors.incomeSoft
+                    : const Color(0xFFE1EAF2),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -555,7 +559,7 @@ class _PlanCard extends StatelessWidget {
                   '重复 ${plan.duplicateCount} 笔',
                   style: const TextStyle(
                     fontSize: 11,
-                    color: Color(0xFFAAA69B),
+                    color: Color(0xFFE2B99F),
                   ),
                 ),
             ],
@@ -569,14 +573,14 @@ class _PlanCard extends StatelessWidget {
                 child: _PlanMetric(
                   label: '支出',
                   value: Money.format(plan.expenseCents),
-                  color: const Color(0xFFAAA69B),
+                  color: const Color(0xFFF0C9B9),
                 ),
               ),
               Expanded(
                 child: _PlanMetric(
                   label: '收入',
                   value: Money.format(plan.incomeCents),
-                  color: const Color(0xFFF7F2E7),
+                  color: const Color(0xFFD7E4DB),
                 ),
               ),
               Expanded(

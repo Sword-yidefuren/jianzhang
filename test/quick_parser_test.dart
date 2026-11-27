@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jianzhang/core/dates.dart';
 import 'package:jianzhang/core/money.dart';
 import 'package:jianzhang/domain/categories.dart';
 import 'package:jianzhang/domain/quick_parser.dart';
@@ -26,6 +27,23 @@ void main() {
       expect(Money.format(2550), '¥25.50');
       expect(Money.format(128008), '¥1,280.08');
       expect(Money.format(-1200), '-¥12');
+    });
+  });
+
+  group('搜索日期', () {
+    test('从关键词里拆出日期', () {
+      final now = DateTime(2026, 11, 4);
+      final monthDay = parseSearchQuery('11月3日 午饭', now: now);
+      expect(monthDay.date, DateTime(2026, 11, 3));
+      expect(monthDay.text, '午饭');
+
+      final yesterday = parseSearchQuery('昨天 打车', now: now);
+      expect(yesterday.date, DateTime(2026, 11, 3));
+      expect(yesterday.text, '打车');
+
+      final full = parseSearchQuery('2026-11-03', now: now);
+      expect(full.date, DateTime(2026, 11, 3));
+      expect(full.text, isEmpty);
     });
   });
 

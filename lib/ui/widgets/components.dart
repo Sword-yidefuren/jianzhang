@@ -231,13 +231,13 @@ class EntryTile extends StatelessWidget {
               width: dense ? 38 : 42,
               height: dense ? 38 : 42,
               decoration: BoxDecoration(
-                color: category.monoColor.withValues(alpha: 0.13),
+                color: category.color.withValues(alpha: 0.13),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(
                 category.icon,
                 size: dense ? 19 : 21,
-                color: category.monoColor,
+                color: category.color,
               ),
             ),
             const SizedBox(width: 13),
@@ -318,15 +318,13 @@ class CategoryMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: soft
-            ? category.monoColor.withValues(alpha: 0.13)
-            : category.monoColor,
+        color: soft ? category.color.withValues(alpha: 0.13) : category.color,
         borderRadius: BorderRadius.circular(size * 0.32),
       ),
       child: Icon(
         category.icon,
         size: size * 0.47,
-        color: soft ? category.monoColor : Colors.white,
+        color: soft ? category.color : Colors.white,
       ),
     );
   }

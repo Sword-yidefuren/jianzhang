@@ -24,18 +24,6 @@ class Category {
   final IconData icon;
   final Color color;
   final List<String> keywords;
-
-  /// 黑白主题下用几档灰区分分类，不保留原来的彩色。
-  Color get monoColor {
-    const tones = [
-      Color(0xFF1B1B19),
-      Color(0xFF4A4742),
-      Color(0xFF6F6C66),
-      Color(0xFF8C887E),
-    ];
-    final code = name.codeUnits.fold<int>(0, (sum, unit) => sum + unit);
-    return tones[code % tones.length];
-  }
 }
 
 const _incomeColor = Color(0xFF3E7864);

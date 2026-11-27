@@ -74,3 +74,81 @@ DateTime endOfDay(DateTime date) =>
 
 DateTime endOfMonth(DateTime month) =>
     DateTime(month.year, month.month + 1, 0, 23, 59, 59, 999);
+
+class SearchQuery {
+  const SearchQuery({this.date, this.text = ''});
+
+  final DateTime? date;
+  final String text;
+}
+
+/// 从搜索词里拆出日期，剩下的文字继续按商家/备注/分类/账户匹配。
+SearchQuery parseSearchQuery(String input, {DateTime? now}) {
+  final today = dateOnly(now ?? DateTime.now());
+  var text = input.trim();
+  if (text.isEmpty) return const SearchQuery();
+
+  DateTime? date;
+  for (final item in const {'今天': 0, '昨天': 1, '前天': 2}.entries) {
+    if (text.contains(item.key)) {
+      date = today.subtract(Duration(days: item.value));
+      text = text.replaceFirst(item.key, '');
+      return SearchQuery(date: date, text: text.trim());
+    }
+  }
+
+  final full = RegExp(r'(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})日?')
+      .firstMatch(text);
+  if (full != null) {
+    final year = int.parse(full.group(1)!);
+    final month = int.parse(full.group(2)!);
+    final day = int.parse(full.group(3)!);
+    if (_validDay(year, month, day)) {
+      date = DateTime(year, month, day);
+      text = text.replaceFirst(full.group(0)!, '');
+    }
+  }
+
+  if (date == null) {
+    final monthDay = RegExp(r'(\d{1,2})月(\d{1,2})日?').firstMatch(text);
+    if (monthDay != null) {
+      final month = int.parse(monthDay.group(1)!);
+      final day = int.parse(monthDay.group(2)!);
+      if (_validDay(today.year, month, day)) {
+        date = DateTime(today.year, month, day);
+        text = text.replaceFirst(monthDay.group(0)!, '');
+      }
+    }
+  }
+
+  if (date == null) {
+    final short = RegExp(r'(?<!\d)(\d{1,2})[-/](\d{1,2})(?!\d)')
+        .firstMatch(text);
+    if (short != null) {
+      final month = int.parse(short.group(1)!);
+      final day = int.parse(short.group(2)!);
+      if (_validDay(today.year, month, day)) {
+        date = DateTime(today.year, month, day);
+        text = text.replaceFirst(short.group(0)!, '');
+      }
+    }
+  }
+
+  if (date == null) {
+    final dayOnly = RegExp(r'(?<!\d)(\d{1,2})号').firstMatch(text);
+    if (dayOnly != null) {
+      final day = int.parse(dayOnly.group(1)!);
+      if (_validDay(today.year, today.month, day)) {
+        date = DateTime(today.year, today.month, day);
+        text = text.replaceFirst(dayOnly.group(0)!, '');
+      }
+    }
+  }
+
+  return SearchQuery(date: date, text: text.trim());
+}
+
+bool _validDay(int year, int month, int day) {
+  if (month < 1 || month > 12 || day < 1) return false;
+  return day <= DateTime(year, month + 1, 0).day;
+}

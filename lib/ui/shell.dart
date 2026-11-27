@@ -44,25 +44,10 @@ class _AppShellState extends State<AppShell> {
         if (!wide) {
           return Scaffold(
             body: body,
-            floatingActionButton: Transform.translate(
-              offset: const Offset(0, 10),
-              child: FloatingActionButton(
-                onPressed: _openNewEntry,
-                backgroundColor: AppColors.ink,
-                foregroundColor: const Color(0xFFF7F2E7),
-                elevation: 0,
-                shape: const CircleBorder(),
-                child: const Icon(Icons.add_rounded, size: 28),
-              ),
-            ),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
             bottomNavigationBar: BottomAppBar(
               color: AppColors.paper,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
-              shape: const CircularNotchedRectangle(),
-              notchMargin: 6,
               padding: EdgeInsets.zero,
               child: SafeArea(
                 top: false,
@@ -86,7 +71,14 @@ class _AppShellState extends State<AppShell> {
                           onTap: () => setState(() => _index = 1),
                         ),
                       ),
-                      const SizedBox(width: 76),
+                      Expanded(
+                        child: Center(
+                          child: _AddButton(
+                            key: const Key('add-entry'),
+                            onTap: _openNewEntry,
+                          ),
+                        ),
+                      ),
                       Expanded(
                         child: _BottomTab(
                           icon: Icons.savings_rounded,
@@ -124,6 +116,36 @@ class _AppShellState extends State<AppShell> {
           ),
         );
       },
+    );
+  }
+}
+
+class _AddButton extends StatelessWidget {
+  const _AddButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: '记一笔',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: AppColors.ink,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.add_rounded,
+            size: 25,
+            color: Color(0xFFF7F2E7),
+          ),
+        ),
+      ),
     );
   }
 }
